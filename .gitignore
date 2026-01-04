@@ -1,0 +1,37 @@
+# Environment variables
+.env
+
+# Результаты генерации
+backend/results/
+
+# Тестовые данные
+test.csv
+
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+
+# Build artifacts
+*.out
+/bin/
+
+# Go workspace file
+go.work
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker volumes
+postgres_data/

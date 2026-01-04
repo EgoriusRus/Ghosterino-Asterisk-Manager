@@ -1,0 +1,11 @@
+# Игнорируем файлы, которые не нужны в Docker образе
+results/
+test.csv
+.git
+.idea
+*.swp
+*.swo
+.DS_Store
+*.exe
+*.test
+*.out

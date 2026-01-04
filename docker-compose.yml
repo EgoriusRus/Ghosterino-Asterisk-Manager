@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: asterisk-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-asterisk_manager}
+      TZ: Europe/Moscow
+      PGTZ: Europe/Moscow
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-asterisk_manager}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - asterisk-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: asterisk-backend
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-asterisk_manager}
+      TZ: Europe/Moscow
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    volumes:
+      - ./backend/results:/app/results
+      - ./test.csv:/app/test.csv:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - asterisk-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  asterisk-network:
+    driver: bridge

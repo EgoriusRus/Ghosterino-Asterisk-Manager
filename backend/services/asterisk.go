@@ -7,7 +7,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+
+	"romchek-asteriska/domain"
+	"romchek-asteriska/repositories"
 )
 
 // PhoneRecord представляет запись о телефоне/сотруднике
@@ -110,6 +114,92 @@ func (g *AsteriskGenerator) LoadCSV(filename string) error {
 
 	fmt.Printf("Загружено записей: %d\n", len(g.Records))
 	return nil
+}
+
+// LoadFromDatabase загружает данные из базы данных
+func (g *AsteriskGenerator) LoadFromDatabase(repos *repositories.Repos) error {
+	db := repos.GetDB()
+
+	var profiles []domain.Profile
+	err := db.Preload("Location").
+		Where("is_active = ?", true).
+		Find(&profiles).Error
+
+	if err != nil {
+		return fmt.Errorf("ошибка загрузки профилей: %w", err)
+	}
+
+	// Загружаем устройства
+	var devices []domain.Device
+	deviceMap := make(map[string]domain.Device)
+	if err := db.Find(&devices).Error; err != nil {
+		return fmt.Errorf("ошибка загрузки устройств: %w", err)
+	}
+	for _, dev := range devices {
+		deviceMap[dev.MAC] = dev
+	}
+
+	// Конвертируем domain-модели в PhoneRecord
+	for _, profile := range profiles {
+		record := profileToPhoneRecord(profile, deviceMap)
+		if record != nil {
+			g.Records = append(g.Records, *record)
+		}
+	}
+
+	fmt.Printf("Загружено записей из БД: %d\n", len(g.Records))
+	return nil
+}
+
+// profileToPhoneRecord конвертирует domain.Profile в PhoneRecord
+func profileToPhoneRecord(p domain.Profile, deviceMap map[string]domain.Device) *PhoneRecord {
+	if p.Location == nil {
+		return nil // Пропускаем профили без локации
+	}
+
+	record := &PhoneRecord{
+		FullName:  p.Name,
+		Email:     p.Email,
+		Extension: fmt.Sprintf("%d", p.InternalNumber),
+		CityPhone: p.ExternalNumber,
+		Location:  p.Location.Name,
+		SIPServer: p.Location.Server,
+		Subnet:    p.Location.Subnet,
+		VoipVLAN:  strconv.Itoa(p.Location.VoipVLAN),
+		LanVLAN:   strconv.Itoa(p.Location.VLAN),
+		IsActive:  p.IsActive,
+	}
+
+	// Ring Group
+	if p.RingGroup != nil {
+		record.RingGroup = strconv.Itoa(*p.RingGroup)
+	} else {
+		record.RingGroup = "local"
+	}
+
+	// Pickup Group
+	if p.PickupGroup != nil {
+		record.PickupGroup = strconv.Itoa(*p.PickupGroup)
+	}
+
+	// Устройство
+	if p.Device != nil {
+		record.MACAddress = strings.ToLower(*p.Device)
+		if dev, ok := deviceMap[*p.Device]; ok {
+			switch dev.DeviceModel {
+			case domain.DeviceModelYealinkT27G:
+				record.IsT27 = true
+			case domain.DeviceModelYealinkT23G:
+				record.IsT23 = true
+			case domain.DeviceModelFanvil:
+				record.IsFanvil = true
+			case domain.DeviceModelCisco:
+				record.IsCiscoOrFax = true
+			}
+		}
+	}
+
+	return record
 }
 
 // isServiceRow проверяет, является ли строка служебной
