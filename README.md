@@ -127,16 +127,19 @@ make shell-backend  # Войти в shell backend контейнера
 make shell-postgres # Войти в psql консоль
 ```
 
-### Backend Makefile (разработка)
+### Backend Makefile (локальная разработка)
+
+Для работы без Docker, когда PostgreSQL уже запущен:
 
 ```bash
 cd backend
+
 make help          # Показать все доступные команды
-make build         # Собрать API сервер
-make run           # Запустить API сервер локально
+make build         # Собрать API сервер (bin/api)
+make run           # Собрать и запустить API сервер
 make seed          # Заполнить базу тестовыми данными
 make generator     # Запустить генератор конфигов
-make clean         # Очистить собранные файлы
+make clean         # Очистить bin/ и results/
 make test          # Запустить тесты
 ```
 
@@ -290,6 +293,57 @@ make generator
 - `ExtensionsTrankAdm.conf` - Trunk для администрации
 
 **CiscoConf.txt** - конфигурация dial-peer для Cisco роутера
+
+## Production Deployment
+
+Полное руководство по развертыванию на продакшн сервере: **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**
+
+### Быстрый старт на сервере
+
+```bash
+# 1. Клонирование проекта
+git clone https://github.com/EgoriusRus/Ghosterino-Asterisk-Manager.git /opt/asterisk-manager
+cd /opt/asterisk-manager
+
+# 2. Настройка переменных окружения
+cp .env.prod.example .env.prod
+nano .env.prod  # Установите сильные пароли!
+
+# 3. Создание директорий Asterisk
+sudo mkdir -p /srv/tftp /etc/asterisk/users /etc/asterisk/extensions
+
+# 4. Запуск в продакшн режиме
+make prod-up
+
+# 5. Проверка статуса
+make prod-logs
+```
+
+### Production команды
+
+```bash
+make prod-up       # Запустить продакшн сервисы
+make prod-down     # Остановить продакшн сервисы
+make prod-restart  # Перезапустить сервисы
+make prod-logs     # Показать логи
+make prod-build    # Пересобрать образы
+make backup        # Создать бэкап БД
+```
+
+### Отличия от dev окружения
+
+**docker-compose.prod.yml**:
+- PostgreSQL **без внешнего порта** (только для backend)
+- Backend bind на **127.0.0.1** (доступ только через reverse proxy)
+- Volume mounts на реальные директории Asterisk
+- **restart: always** для автоматического восстановления
+- Лимиты логов (10MB, 3 файла)
+
+**Рекомендуется**:
+- Nginx reverse proxy с SSL
+- Firewall (только 80, 443, 22)
+- Автоматические бэкапы через cron
+- Мониторинг логов и метрик
 
 ## Локальная разработка
 

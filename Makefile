@@ -1,4 +1,4 @@
-.PHONY: help demo up down logs restart clean seed generator build test
+.PHONY: help demo up down logs restart clean seed generator build test prod-up prod-down prod-logs prod-restart backup
 
 help: ## Показать помощь
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -99,5 +99,36 @@ api-test: ## Протестировать API endpoints
 	@curl -s http://localhost:8080/api/profiles | jq -r '.[0:2] | length' | xargs -I {} echo "  ✓ {} профиля получены"
 	@echo ""
 	@echo "✅ API работает корректно!"
+
+# Production commands
+prod-up: ## Запустить в продакшн режиме (docker-compose.prod.yml)
+	@echo "🚀 Запуск продакшн сервисов..."
+	@docker-compose -f docker-compose.prod.yml up -d
+	@echo "✅ Сервисы запущены"
+
+prod-down: ## Остановить продакшн сервисы
+	@echo "🛑 Остановка продакшн сервисов..."
+	@docker-compose -f docker-compose.prod.yml down
+	@echo "✅ Сервисы остановлены"
+
+prod-logs: ## Показать логи продакшн сервисов
+	@docker-compose -f docker-compose.prod.yml logs -f
+
+prod-restart: ## Перезапустить продакшн сервисы
+	@echo "🔄 Перезапуск продакшн сервисов..."
+	@docker-compose -f docker-compose.prod.yml restart
+	@echo "✅ Сервисы перезапущены"
+
+prod-build: ## Пересобрать продакшн образы
+	@echo "🔨 Пересборка продакшн образов..."
+	@docker-compose -f docker-compose.prod.yml build --no-cache
+	@docker-compose -f docker-compose.prod.yml up -d
+	@echo "✅ Образы пересобраны и запущены"
+
+backup: ## Создать бэкап базы данных
+	@echo "💾 Создание бэкапа базы данных..."
+	@mkdir -p ./backups
+	@docker-compose -f docker-compose.prod.yml exec -T postgres pg_dump -U $${DB_USER:-asterisk_prod} $${DB_NAME:-asterisk_manager_prod} | gzip > ./backups/backup_$$(date +%Y%m%d_%H%M%S).sql.gz
+	@echo "✅ Бэкап создан в ./backups/"
 
 .DEFAULT_GOAL := help
