@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"time"
 
-	"romchek-asteriska/domain"
+	"asterisk-manager/domain"
 
 	"github.com/pkg/errors"
 	"gorm.io/driver/postgres"

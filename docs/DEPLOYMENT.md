@@ -52,11 +52,13 @@ sudo mkdir -p /opt/asterisk-manager
 sudo chown -R $USER:$USER /opt/asterisk-manager
 ```
 
-### 2. Клонирование проекта
+### 2. Распаковка проекта
 
 ```bash
+# Загрузите asterisk-manager.zip на сервер
+unzip asterisk-manager.zip
+sudo mv asterisk-manager /opt/
 cd /opt/asterisk-manager
-git clone https://github.com/EgoriusRus/Ghosterino-Asterisk-Manager.git .
 ```
 
 ### 3. Настройка переменных окружения
@@ -321,10 +323,15 @@ docker-compose -f docker-compose.prod.yml exec postgres psql -U asterisk_prod -d
 ```bash
 cd /opt/asterisk-manager
 
-# Получение последних изменений
-git pull
+# Остановка сервисов
+docker-compose -f docker-compose.prod.yml down
 
-# Пересборка и перезапуск
+# Распаковка новой версии
+unzip asterisk-manager-new.zip
+cp -r asterisk-manager-new/* .
+rm -rf asterisk-manager-new
+
+# Пересборка и запуск
 docker-compose -f docker-compose.prod.yml up -d --build
 
 # Или через systemd
@@ -419,4 +426,4 @@ asterisk -rx "core show config"
 При возникновении проблем:
 1. Проверьте логи контейнеров
 2. Проверьте конфигурацию Nginx
-3. Создайте issue: https://github.com/EgoriusRus/Ghosterino-Asterisk-Manager/issues
+3. Обратитесь к документации в этом файле

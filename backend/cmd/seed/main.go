@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"romchek-asteriska/repositories"
+	"asterisk-manager/repositories"
 )
 
 func main() {

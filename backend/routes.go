@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"romchek-asteriska/handlers"
+	"asterisk-manager/handlers"
 
 	"github.com/gofiber/fiber/v2"
 )

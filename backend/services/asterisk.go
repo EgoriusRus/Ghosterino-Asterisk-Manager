@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"strings"
 
-	"romchek-asteriska/domain"
-	"romchek-asteriska/repositories"
+	"asterisk-manager/domain"
+	"asterisk-manager/repositories"
 )
 
 // PhoneRecord представляет запись о телефоне/сотруднике

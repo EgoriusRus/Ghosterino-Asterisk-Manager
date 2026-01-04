@@ -3,7 +3,7 @@ package handlers
 import (
 	"log"
 
-	"romchek-asteriska/repositories"
+	"asterisk-manager/repositories"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"

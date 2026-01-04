@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"romchek-asteriska/domain"
+	"asterisk-manager/domain"
 
 	"github.com/gofiber/fiber/v2"
 )

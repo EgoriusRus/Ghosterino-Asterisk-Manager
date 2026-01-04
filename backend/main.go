@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 
-	"romchek-asteriska/handlers"
-	"romchek-asteriska/repositories"
+	"asterisk-manager/handlers"
+	"asterisk-manager/repositories"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
