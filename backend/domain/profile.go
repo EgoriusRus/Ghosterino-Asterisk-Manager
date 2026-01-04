@@ -18,9 +18,16 @@ type Profile struct {
 	IsActive       bool      `gorm:"default:true" json:"isActive"`
 	CreatedAt      time.Time `json:"createdAt"`
 	UpdatedAt      time.Time `json:"updatedAt"`
+}
 
-	// Связи
-	Location *Location `gorm:"foreignKey:LocationID" json:"location,omitempty"`
+// ProfileWithLocation представляет профиль с данными локации
+type ProfileWithLocation struct {
+	Profile
+	LocationName *string `json:"locationName"`
+	Server       *string `json:"server"`
+	Subnet       *string `json:"subnet"`
+	VoipVLAN     *int    `json:"voipVlan"`
+	VLAN         *int    `json:"vlan"`
 }
 
 // TableName указывает имя таблицы в БД

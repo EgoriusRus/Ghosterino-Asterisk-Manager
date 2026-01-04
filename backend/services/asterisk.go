@@ -118,13 +118,8 @@ func (g *AsteriskGenerator) LoadCSV(filename string) error {
 
 // LoadFromDatabase загружает данные из базы данных
 func (g *AsteriskGenerator) LoadFromDatabase(repos *repositories.Repos) error {
-	db := repos.GetDB()
-
-	var profiles []domain.Profile
-	err := db.Preload("Location").
-		Where("is_active = ?", true).
-		Find(&profiles).Error
-
+	isActive := true
+	profiles, err := repos.FindProfilesWithLocations(&isActive)
 	if err != nil {
 		return fmt.Errorf("ошибка загрузки профилей: %w", err)
 	}
@@ -132,7 +127,7 @@ func (g *AsteriskGenerator) LoadFromDatabase(repos *repositories.Repos) error {
 	// Загружаем устройства
 	var devices []domain.Device
 	deviceMap := make(map[string]domain.Device)
-	if err := db.Find(&devices).Error; err != nil {
+	if err := repos.FindAll(&devices); err != nil {
 		return fmt.Errorf("ошибка загрузки устройств: %w", err)
 	}
 	for _, dev := range devices {
@@ -151,9 +146,9 @@ func (g *AsteriskGenerator) LoadFromDatabase(repos *repositories.Repos) error {
 	return nil
 }
 
-// profileToPhoneRecord конвертирует domain.Profile в PhoneRecord
-func profileToPhoneRecord(p domain.Profile, deviceMap map[string]domain.Device) *PhoneRecord {
-	if p.Location == nil {
+// profileToPhoneRecord конвертирует domain.ProfileWithLocation в PhoneRecord
+func profileToPhoneRecord(p domain.ProfileWithLocation, deviceMap map[string]domain.Device) *PhoneRecord {
+	if p.LocationName == nil || p.Server == nil || p.Subnet == nil {
 		return nil // Пропускаем профили без локации
 	}
 
@@ -162,11 +157,11 @@ func profileToPhoneRecord(p domain.Profile, deviceMap map[string]domain.Device) 
 		Email:     p.Email,
 		Extension: fmt.Sprintf("%d", p.InternalNumber),
 		CityPhone: p.ExternalNumber,
-		Location:  p.Location.Name,
-		SIPServer: p.Location.Server,
-		Subnet:    p.Location.Subnet,
-		VoipVLAN:  strconv.Itoa(p.Location.VoipVLAN),
-		LanVLAN:   strconv.Itoa(p.Location.VLAN),
+		Location:  *p.LocationName,
+		SIPServer: *p.Server,
+		Subnet:    *p.Subnet,
+		VoipVLAN:  strconv.Itoa(*p.VoipVLAN),
+		LanVLAN:   strconv.Itoa(*p.VLAN),
 		IsActive:  p.IsActive,
 	}
 

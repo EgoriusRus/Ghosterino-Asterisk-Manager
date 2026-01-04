@@ -138,17 +138,45 @@ func (rs *Repos) Delete(object interface{}) error {
 	return rs.db.Delete(object).Error
 }
 
-// GetDB возвращает инстанс GORM DB (только для внутреннего использования в services)
-func (rs *Repos) GetDB() *gorm.DB {
-	return rs.db
+// FindAll находит все записи
+func (rs *Repos) FindAll(dest interface{}) error {
+	return rs.db.Find(dest).Error
 }
 
-// ignoreNotFound игнорирует ошибку "запись не найдена"
-func ignoreNotFound[T any](object *T, err error) (*T, error) {
-	if err == gorm.ErrRecordNotFound {
-		return nil, nil
+// FindByID находит запись по ID
+func (rs *Repos) FindByID(dest interface{}, id interface{}) error {
+	return rs.db.First(dest, id).Error
+}
+
+// FindOne находит одну запись по условию
+func (rs *Repos) FindOne(dest interface{}, condition string, args ...interface{}) error {
+	return rs.db.Where(condition, args...).First(dest).Error
+}
+
+// FindProfilesWithLocations находит профили с джойном к локациям
+func (rs *Repos) FindProfilesWithLocations(isActive *bool) ([]domain.ProfileWithLocation, error) {
+	var profiles []domain.ProfileWithLocation
+
+	query := rs.db.Table("sipadmin.profiles AS p").
+		Select(`
+			p.id, p.name, p.email, p.device, p.location_id, p.internal_number,
+			p.external_number, p.ring_group, p.pickup_group, p.is_active,
+			p.created_at, p.updated_at,
+			l.name AS location_name, l.server, l.subnet, l.voip_vlan, l.vlan
+		`).
+		Joins("LEFT JOIN sipadmin.locations AS l ON p.location_id = l.id")
+
+	if isActive != nil {
+		query = query.Where("p.is_active = ?", *isActive)
 	}
-	return object, err
+
+	err := query.Scan(&profiles).Error
+	return profiles, err
+}
+
+// Exec выполняет raw SQL запрос
+func (rs *Repos) Exec(sql string) error {
+	return rs.db.Exec(sql).Error
 }
 
 // ConnectionString формирует строку подключения к PostgreSQL

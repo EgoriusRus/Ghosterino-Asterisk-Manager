@@ -21,17 +21,29 @@ func initRoutes(app *fiber.App, h *handlers.Handler) {
 	// API группа
 	api := app.Group("/api")
 
-	// Locations endpoints
-	locations := api.Group("/locations")
-	_ = locations // TODO: добавить handlers для locations
+	// Profiles endpoints
+	profiles := api.Group("/profiles")
+	profiles.Get("/", h.GetProfiles)
+	profiles.Get("/:id", h.GetProfile)
+	profiles.Post("/", h.CreateProfile)
+	profiles.Put("/:id", h.UpdateProfile)
+	profiles.Delete("/:id", h.DeleteProfile)
 
 	// Devices endpoints
 	devices := api.Group("/devices")
-	_ = devices // TODO: добавить handlers для devices
+	devices.Get("/", h.GetDevices)
+	devices.Get("/:mac", h.GetDevice)
+	devices.Post("/", h.CreateDevice)
+	devices.Put("/:mac", h.UpdateDevice)
+	devices.Delete("/:mac", h.DeleteDevice)
 
-	// Profiles endpoints
-	profiles := api.Group("/profiles")
-	_ = profiles // TODO: добавить handlers для profiles
+	// Locations endpoints
+	locations := api.Group("/locations")
+	locations.Get("/", h.GetLocations)
+	locations.Get("/:id", h.GetLocation)
+	locations.Post("/", h.CreateLocation)
+	locations.Put("/:id", h.UpdateLocation)
+	locations.Delete("/:id", h.DeleteLocation)
 
 	// Generator endpoints
 	generator := api.Group("/generator")
