@@ -5,8 +5,8 @@
 ## 🚀 Быстрый старт
 
 ```bash
-git clone https://github.com/EgoriusRus/Ghosterino-Asterisk-Manager.git
-cd Ghosterino-Asterisk-Manager
+# Распакуйте архив и перейдите в директорию
+cd asterisk-manager
 make demo
 ```
 
@@ -61,10 +61,10 @@ backend/
 
 ### Установка и запуск
 
-1. **Клонируйте репозиторий:**
+1. **Распакуйте архив:**
 ```bash
-git clone https://github.com/EgoriusRus/Ghosterino-Asterisk-Manager.git
-cd Ghosterino-Asterisk-Manager
+unzip asterisk-manager.zip
+cd asterisk-manager
 ```
 
 2. **Запустите полное демо одной командой:**
@@ -301,8 +301,9 @@ make generator
 ### Быстрый старт на сервере
 
 ```bash
-# 1. Клонирование проекта
-git clone https://github.com/EgoriusRus/Ghosterino-Asterisk-Manager.git /opt/asterisk-manager
+# 1. Распаковка проекта
+unzip asterisk-manager.zip
+sudo mv asterisk-manager /opt/
 cd /opt/asterisk-manager
 
 # 2. Настройка переменных окружения
@@ -473,11 +474,3 @@ CGO_ENABLED=0 go build -o bin/asterisk-api main.go routes.go
 ## Лицензия
 
 MIT
-
-## Автор
-
-EgoriusRus - [GitHub](https://github.com/EgoriusRus)
-
-## Поддержка
-
-При возникновении проблем создайте [issue](https://github.com/EgoriusRus/Ghosterino-Asterisk-Manager/issues) в репозитории.
