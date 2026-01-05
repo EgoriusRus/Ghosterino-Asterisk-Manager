@@ -14,8 +14,3 @@ export interface UserInfo {
   avatar?: string
   role: string
 }
-
-export interface SidebarState {
-  isOpen: boolean
-  isCollapsed: boolean
-}

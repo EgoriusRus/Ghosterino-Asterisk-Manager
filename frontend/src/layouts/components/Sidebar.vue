@@ -5,13 +5,11 @@ import type { MenuItem } from '@/types/navigation'
 
 interface Props {
   isOpen: boolean
-  isCollapsed: boolean
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits<{
   close: []
-  logout: []
 }>()
 
 const route = useRoute()
@@ -20,19 +18,19 @@ const menuItems: MenuItem[] = [
   {
     id: 'dashboard',
     label: 'Dashboard',
-    icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
+    icon: 'M19 11H5M19 11C20.1046 11 21 11.8954 21 13V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V13C3 11.8954 3.89543 11 5 11M19 11V9C19 7.89543 18.1046 7 17 7M5 11V9C5 7.89543 5.89543 7 7 7M7 7V5C7 3.89543 7.89543 3 9 3H15C16.1046 3 17 3.89543 17 5V7M7 7H17',
     path: '/admin/dashboard'
   },
   {
     id: 'users',
-    label: 'Users',
-    icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',
+    label: 'Accounts',
+    icon: 'M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z',
     path: '/admin/users'
   },
   {
     id: 'settings',
     label: 'Settings',
-    icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z',
+    icon: 'M10.3246 4.31731C10.751 2.5609 13.249 2.5609 13.6754 4.31731C13.9508 5.45193 15.2507 5.99038 16.2478 5.38285C17.7913 4.44239 19.5576 6.2087 18.6172 7.75218C18.0096 8.74925 18.5481 10.0492 19.6827 10.3246C21.4391 10.751 21.4391 13.249 19.6827 13.6754C18.5481 13.9508 18.0096 15.2507 18.6172 16.2478C19.5576 17.7913 17.7913 19.5576 16.2478 18.6172C15.2507 18.0096 13.9508 18.5481 13.6754 19.6827C13.249 21.4391 10.751 21.4391 10.3246 19.6827C10.0492 18.5481 8.74926 18.0096 7.75219 18.6172C6.2087 19.5576 4.44239 17.7913 5.38285 16.2478C5.99038 15.2507 5.45193 13.9508 4.31731 13.6754C2.5609 13.249 2.5609 10.751 4.31731 10.3246C5.45193 10.0492 5.99037 8.74926 5.38285 7.75218C4.44239 6.2087 6.2087 4.44239 7.75219 5.38285C8.74926 5.99037 10.0492 5.45193 10.3246 4.31731Z M15 12C15 13.6569 13.6569 15 12 15C10.3431 15 9 13.6569 9 12C9 10.3431 10.3431 9 12 9C13.6569 9 15 10.3431 15 12Z',
     path: '/admin/settings'
   }
 ]
@@ -44,9 +42,9 @@ const isActiveRoute = (path: string): boolean => {
 const sidebarClasses = computed(() => {
   return [
     'fixed lg:static inset-y-0 left-0 z-30',
-    'bg-gray-800 text-white',
-    'transition-all duration-300 ease-in-out',
-    props.isCollapsed ? 'w-16' : 'w-64',
+    'flex flex-col w-64 h-screen px-4 py-8 overflow-y-auto',
+    'bg-white border-r rtl:border-r-0 rtl:border-l dark:bg-gray-900 dark:border-gray-700',
+    'transition-transform duration-300 ease-in-out',
     props.isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
   ]
 })
@@ -55,93 +53,53 @@ const sidebarClasses = computed(() => {
 <template>
   <aside :class="sidebarClasses">
     <!-- Logo/Brand -->
-    <div class="flex items-center justify-between h-16 px-4 border-b border-gray-700">
-      <div class="flex items-center space-x-2">
-        <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-          <span class="text-white font-bold text-sm">A</span>
-        </div>
-        <Transition
-          enter-active-class="transition-opacity duration-200"
-          leave-active-class="transition-opacity duration-200"
-          enter-from-class="opacity-0"
-          leave-to-class="opacity-0"
-        >
-          <span v-if="!isCollapsed" class="font-semibold text-lg">Admin</span>
-        </Transition>
-      </div>
-    </div>
+    <router-link to="/admin/dashboard">
+      <img class="w-auto h-6 sm:h-7" src="https://merakiui.com/images/logo.svg" alt="Logo">
+    </router-link>
 
     <!-- Navigation -->
-    <nav class="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
-      <router-link
-        v-for="item in menuItems"
-        :key="item.id"
-        :to="item.path"
-        :class="[
-          'flex items-center px-3 py-2 rounded-lg transition-colors duration-200',
-          isActiveRoute(item.path)
-            ? 'bg-indigo-600 text-white'
-            : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-        ]"
-        @click="emit('close')"
-      >
-        <svg
-          class="w-6 h-6 flex-shrink-0"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+    <div class="flex flex-col justify-between flex-1 mt-6">
+      <nav>
+        <router-link
+          v-for="(item, index) in menuItems"
+          :key="item.id"
+          :to="item.path"
+          :class="[
+            'flex items-center px-4 py-2 rounded-md transition-colors duration-300 transform',
+            index > 0 ? 'mt-5' : '',
+            isActiveRoute(item.path)
+              ? 'text-gray-700 bg-gray-100 dark:bg-gray-800 dark:text-gray-200'
+              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:text-gray-200 hover:text-gray-700'
+          ]"
+          @click="emit('close')"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            :d="item.icon"
-          />
-        </svg>
-        <Transition
-          enter-active-class="transition-opacity duration-200"
-          leave-active-class="transition-opacity duration-200"
-          enter-from-class="opacity-0"
-          leave-to-class="opacity-0"
-        >
-          <span v-if="!isCollapsed" class="ml-3 font-medium">
-            {{ item.label }}
-          </span>
-        </Transition>
-      </router-link>
-    </nav>
+          <svg
+            class="w-5 h-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              :d="item.icon"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <span class="mx-4 font-medium">{{ item.label }}</span>
+        </router-link>
+      </nav>
 
-    <!-- Logout Button -->
-    <div class="px-2 py-4 border-t border-gray-700">
-      <button
-        @click="emit('logout')"
-        :class="[
-          'flex items-center w-full px-3 py-2 rounded-lg transition-colors duration-200',
-          'text-gray-300 hover:bg-red-600 hover:text-white'
-        ]"
-      >
-        <svg
-          class="w-6 h-6 flex-shrink-0"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-          />
-        </svg>
-        <Transition
-          enter-active-class="transition-opacity duration-200"
-          leave-active-class="transition-opacity duration-200"
-          enter-from-class="opacity-0"
-          leave-to-class="opacity-0"
-        >
-          <span v-if="!isCollapsed" class="ml-3 font-medium">Logout</span>
-        </Transition>
-      </button>
+      <!-- User Profile -->
+      <a href="#" class="flex items-center px-4 -mx-2">
+        <img
+          class="object-cover mx-2 rounded-full h-9 w-9"
+          src="https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80"
+          alt="avatar"
+        />
+        <span class="mx-2 font-medium text-gray-800 dark:text-gray-200">John Doe</span>
+      </a>
     </div>
 
     <!-- Mobile overlay -->

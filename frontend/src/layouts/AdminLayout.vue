@@ -1,33 +1,16 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import Sidebar from './components/Sidebar.vue'
-import Header from './components/Header.vue'
-import type { SidebarState } from '@/types/navigation'
 
-// Sidebar state management
-const sidebarState = ref<SidebarState>({
-  isOpen: false, // For mobile overlay
-  isCollapsed: false // For desktop collapse
-})
-
-const toggleSidebar = () => {
-  sidebarState.value.isCollapsed = !sidebarState.value.isCollapsed
-}
+// Sidebar state management (mobile only)
+const isMobileSidebarOpen = ref(false)
 
 const toggleMobileSidebar = () => {
-  sidebarState.value.isOpen = !sidebarState.value.isOpen
+  isMobileSidebarOpen.value = !isMobileSidebarOpen.value
 }
 
 const closeMobileSidebar = () => {
-  sidebarState.value.isOpen = false
-}
-
-const handleLogout = () => {
-  // In production, this would call auth store logout
-  console.log('Logout clicked')
-  // Redirect to login page (placeholder)
-  // router.push('/login')
-  alert('Logout functionality - implement auth integration')
+  isMobileSidebarOpen.value = false
 }
 </script>
 
@@ -35,43 +18,40 @@ const handleLogout = () => {
   <div class="min-h-screen bg-gray-50 flex">
     <!-- Sidebar -->
     <Sidebar
-      :is-open="sidebarState.isOpen"
-      :is-collapsed="sidebarState.isCollapsed"
+      :is-open="isMobileSidebarOpen"
       @close="closeMobileSidebar"
-      @logout="handleLogout"
     />
 
     <!-- Main content area -->
-    <div
-      :class="[
-        'flex-1 flex flex-col transition-all duration-300',
-        'lg:ml-0',
-        sidebarState.isCollapsed ? 'lg:ml-16' : 'lg:ml-64'
-      ]"
-    >
-      <!-- Header -->
-      <Header
-        :is-collapsed="sidebarState.isCollapsed"
-        @toggle-sidebar="toggleSidebar"
-        @toggle-mobile-sidebar="toggleMobileSidebar"
-      />
+    <div class="flex-1 flex flex-col">
+      <!-- Mobile menu toggle button (visible only on mobile) -->
+      <div class="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center">
+        <button
+          @click="toggleMobileSidebar"
+          class="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+          aria-label="Toggle mobile menu"
+        >
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          </svg>
+        </button>
+        <h1 class="ml-3 text-lg font-semibold text-gray-800">Admin Panel</h1>
+      </div>
 
       <!-- Main content -->
       <main class="flex-1 p-6 overflow-y-auto">
         <router-view />
       </main>
-
-      <!-- Footer (optional) -->
-      <footer class="bg-white border-t border-gray-200 py-4 px-6">
-        <div class="flex flex-col sm:flex-row justify-between items-center text-sm text-gray-600">
-          <p>&copy; 2026 Admin Panel. All rights reserved.</p>
-          <div class="flex space-x-4 mt-2 sm:mt-0">
-            <a href="#" class="hover:text-indigo-600 transition-colors">Privacy</a>
-            <a href="#" class="hover:text-indigo-600 transition-colors">Terms</a>
-            <a href="#" class="hover:text-indigo-600 transition-colors">Support</a>
-          </div>
-        </div>
-      </footer>
     </div>
   </div>
 </template>

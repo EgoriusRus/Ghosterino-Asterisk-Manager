@@ -13,8 +13,7 @@ This document describes the admin layout implementation for the Vue 3 + TypeScri
 ```
 App.vue (router-view)
 └── AdminLayout.vue
-    ├── Sidebar.vue (layouts/components/)
-    ├── Header.vue (layouts/components/)
+    ├── Sidebar.vue (layouts/components/) - Meraki UI design
     └── router-view (content area)
         ├── DashboardView.vue
         ├── UsersView.vue
@@ -37,13 +36,14 @@ App.vue (router-view)
 
 **Location:** `/src/layouts/AdminLayout.vue`
 
-**Purpose:** Main layout wrapper that orchestrates sidebar, header, and content area.
+**Purpose:** Main layout wrapper that orchestrates sidebar and content area.
 
 **Features:**
-- Manages sidebar state (collapsed/expanded, mobile open/closed)
+- Manages mobile sidebar state (open/closed)
 - Responsive layout with Tailwind CSS
-- Smooth transitions between states
+- Mobile menu toggle button (visible only on mobile)
 - Footer with links
+- Fixed sidebar width (w-64 = 256px)
 
 **Props:** None (root layout)
 
@@ -51,17 +51,12 @@ App.vue (router-view)
 
 **State:**
 ```typescript
-interface SidebarState {
-  isOpen: boolean      // Mobile sidebar overlay state
-  isCollapsed: boolean // Desktop sidebar collapse state
-}
+const isMobileSidebarOpen = ref(false) // Mobile sidebar overlay state
 ```
 
 **Methods:**
-- `toggleSidebar()` - Toggles desktop sidebar collapse
 - `toggleMobileSidebar()` - Toggles mobile sidebar overlay
 - `closeMobileSidebar()` - Closes mobile sidebar
-- `handleLogout()` - Handles logout action (placeholder)
 
 **Usage:**
 ```vue
@@ -71,76 +66,33 @@ interface SidebarState {
 
 ---
 
-### 2. Header.vue
-
-**Location:** `/src/layouts/components/Header.vue`
-
-**Purpose:** Top navigation bar with user info and controls.
-
-**Features:**
-- Mobile hamburger menu button
-- Desktop sidebar toggle button
-- Page title/breadcrumb area
-- Notification icon with badge
-- User profile display (name, role, avatar)
-- Responsive design
-
-**Props:**
-```typescript
-interface Props {
-  isCollapsed: boolean // Sidebar collapse state
-}
-```
-
-**Events Emitted:**
-```typescript
-{
-  toggleSidebar: []        // Desktop toggle clicked
-  toggleMobileSidebar: []  // Mobile hamburger clicked
-}
-```
-
-**User Data:**
-Currently uses mock data. In production, integrate with auth store:
-```typescript
-interface UserInfo {
-  id: string
-  name: string
-  email: string
-  avatar?: string
-  role: string
-}
-```
-
----
-
-### 3. Sidebar.vue
+### 2. Sidebar.vue
 
 **Location:** `/src/layouts/components/Sidebar.vue`
 
-**Purpose:** Navigation sidebar with menu items.
+**Purpose:** Navigation sidebar with Meraki UI design.
 
 **Features:**
-- Navigation menu with icons
-- Active route highlighting
-- Logout button
+- Clean Meraki UI design with logo
+- Navigation menu with icons and active route highlighting
+- User profile section at bottom with avatar
 - Smooth animations and transitions
 - Mobile overlay backdrop
-- Responsive width adjustment
+- Fixed width (w-64 = 256px)
+- Dark mode support
+- RTL (right-to-left) support
 
 **Props:**
 ```typescript
 interface Props {
-  isOpen: boolean      // Mobile overlay state
-  isCollapsed: boolean // Desktop collapse state
+  isOpen: boolean  // Mobile overlay state
 }
 ```
 
 **Events Emitted:**
 ```typescript
 {
-  close: []   // Close mobile sidebar
-  logout: []  // Logout clicked
+  close: []  // Close mobile sidebar
 }
 ```
 
@@ -157,7 +109,7 @@ interface MenuItem {
 
 Current menu:
 - Dashboard (`/admin/dashboard`)
-- Users (`/admin/users`)
+- Accounts (`/admin/users`)
 - Settings (`/admin/settings`)
 
 **Customization:**
@@ -176,7 +128,7 @@ const menuItems: MenuItem[] = [
 
 ---
 
-### 4. View Components
+### 3. View Components
 
 #### DashboardView.vue
 
@@ -324,9 +276,9 @@ router.beforeEach((to, _from, next) => {
 ### Tailwind CSS Classes
 
 #### Layout
-- Sidebar: `w-64` (expanded) / `w-16` (collapsed)
-- Header: `h-16` fixed height
+- Sidebar: `w-64` fixed width (256px)
 - Content: `flex-1` to fill remaining space
+- Main content margin: `lg:ml-64` on desktop
 
 #### Colors
 - Primary: `indigo-600`
@@ -361,8 +313,8 @@ To customize colors, edit Tailwind config or use CSS variables:
 ### Current Implementation
 
 State is managed locally in components using Vue 3 Composition API:
-- Sidebar state: `AdminLayout.vue`
-- User data: Mock data in `Header.vue`
+- Mobile sidebar state: `AdminLayout.vue`
+- User data: Mock data in `Sidebar.vue` (avatar section)
 - Form data: Local refs in view components
 
 ### Recommended Enhancement
@@ -396,15 +348,14 @@ export const useAuthStore = defineStore('auth', () => {
 
 ### Desktop (≥1024px)
 
-- Sidebar always visible
-- Can collapse to icon-only (64px)
-- Content area adjusts margin: `ml-64` or `ml-16`
-- Desktop toggle button in header
+- Sidebar always visible with fixed width (256px)
+- Content area has left margin: `ml-64`
+- Mobile toggle button hidden
 
 ### Mobile (<1024px)
 
 - Sidebar hidden by default
-- Hamburger menu in header
+- Hamburger menu button in layout (top bar)
 - Sidebar opens as fixed overlay
 - Dark backdrop (50% opacity)
 - Closes on outside click or navigation
@@ -443,11 +394,6 @@ export interface UserInfo {
   email: string
   avatar?: string
   role: string
-}
-
-export interface SidebarState {
-  isOpen: boolean
-  isCollapsed: boolean
 }
 ```
 
@@ -536,21 +482,12 @@ router.beforeEach((to, _from, next) => {
 })
 ```
 
-3. **Update Header.vue**:
+3. **Update Sidebar.vue user section**:
 ```typescript
 import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()
 const user = computed(() => authStore.user)
-```
-
-4. **Update AdminLayout logout**:
-```typescript
-const handleLogout = async () => {
-  const authStore = useAuthStore()
-  await authStore.logout()
-  router.push('/login')
-}
 ```
 
 ### Adding API Integration
@@ -625,47 +562,34 @@ toast.error('Failed to save settings')
 <!-- Sidebar.vue -->
 <template>
   <aside :class="[
-    // Change these values:
-    props.isCollapsed ? 'w-20' : 'w-72',
+    // Change w-64 to desired width (e.g., w-72):
+    'w-64',
   ]">
 ```
 
 ```vue
 <!-- AdminLayout.vue -->
 <div :class="[
-  // Match sidebar widths:
-  sidebarState.isCollapsed ? 'lg:ml-20' : 'lg:ml-72'
+  // Match sidebar width (e.g., lg:ml-72):
+  'lg:ml-64'
 ]">
 ```
 
 ### Adding User Dropdown Menu
 
 ```vue
-<!-- Header.vue -->
+<!-- Sidebar.vue - Replace user section -->
 <div class="relative">
-  <button @click="showDropdown = !showDropdown">
-    <!-- User avatar -->
+  <button @click="showDropdown = !showDropdown" class="flex items-center px-4 -mx-2 w-full">
+    <img class="object-cover mx-2 rounded-full h-9 w-9" :src="user.avatar" alt="avatar" />
+    <span class="mx-2 font-medium text-gray-800 dark:text-gray-200">{{ user.name }}</span>
   </button>
-  <div v-if="showDropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg">
-    <a href="#" class="block px-4 py-2 hover:bg-gray-100">Profile</a>
-    <a href="#" class="block px-4 py-2 hover:bg-gray-100">Settings</a>
-    <a href="#" class="block px-4 py-2 hover:bg-gray-100">Logout</a>
+  <div v-if="showDropdown" class="absolute bottom-full left-0 mb-2 w-full bg-white rounded-lg shadow-lg">
+    <router-link to="/admin/profile" class="block px-4 py-2 hover:bg-gray-100">Profile</router-link>
+    <router-link to="/admin/settings" class="block px-4 py-2 hover:bg-gray-100">Settings</router-link>
+    <button @click="handleLogout" class="block w-full text-left px-4 py-2 hover:bg-gray-100">Logout</button>
   </div>
 </div>
-```
-
-### Adding Breadcrumbs
-
-```vue
-<!-- Header.vue -->
-<nav class="flex" aria-label="Breadcrumb">
-  <ol class="flex items-center space-x-2">
-    <li v-for="(crumb, i) in breadcrumbs" :key="i">
-      <router-link :to="crumb.path">{{ crumb.label }}</router-link>
-      <span v-if="i < breadcrumbs.length - 1">/</span>
-    </li>
-  </ol>
-</nav>
 ```
 
 ---
@@ -688,7 +612,6 @@ const routes = [
 
 ```typescript
 // AdminLayout.vue
-const Header = defineAsyncComponent(() => import('./components/Header.vue'))
 const Sidebar = defineAsyncComponent(() => import('./components/Sidebar.vue'))
 ```
 
@@ -864,6 +787,19 @@ For questions or issues:
 
 ## Changelog
 
+### Version 1.1.0 (2026-01-05)
+
+**Updated Release**
+- Replaced sidebar with Meraki UI design
+- Removed Header component
+- Simplified layout to sidebar + content only
+- Fixed sidebar width (w-64 = 256px)
+- Mobile toggle button integrated into layout
+- Updated navigation items (Dashboard, Accounts, Settings)
+- User avatar section in sidebar
+- RTL support added
+- Removed SidebarState interface (no longer needed)
+
 ### Version 1.0.0 (2026-01-05)
 
 **Initial Release**
@@ -878,5 +814,5 @@ For questions or issues:
 ---
 
 **Last Updated:** 2026-01-05
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Author:** Admin Layout Implementation Team
