@@ -1,14 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 import AdminLayout from '@/layouts/AdminLayout.vue'
-import DashboardView from '@/views/DashboardView.vue'
-import UsersView from '@/views/UsersView.vue'
-import SettingsView from '@/views/SettingsView.vue'
+import ProfilesView from '@/views/ProfilesView.vue'
+import DevicesView from '@/views/DevicesView.vue'
+import LocationsView from '@/views/LocationsView.vue'
 
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    redirect: '/admin/dashboard'
+    redirect: '/admin/profiles'
   },
   {
     path: '/admin',
@@ -16,32 +16,32 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: '',
-        redirect: '/admin/dashboard'
+        redirect: '/admin/profiles'
       },
       {
-        path: 'dashboard',
-        name: 'dashboard',
-        component: DashboardView,
+        path: 'profiles',
+        name: 'profiles',
+        component: ProfilesView,
         meta: {
-          title: 'Dashboard',
+          title: 'Сотрудники',
           requiresAuth: true
         }
       },
       {
-        path: 'users',
-        name: 'users',
-        component: UsersView,
+        path: 'devices',
+        name: 'devices',
+        component: DevicesView,
         meta: {
-          title: 'Users',
+          title: 'Устройства',
           requiresAuth: true
         }
       },
       {
-        path: 'settings',
-        name: 'settings',
-        component: SettingsView,
+        path: 'locations',
+        name: 'locations',
+        component: LocationsView,
         meta: {
-          title: 'Settings',
+          title: 'Локации',
           requiresAuth: true
         }
       }
@@ -50,7 +50,7 @@ const routes: RouteRecordRaw[] = [
   {
     // Catch-all route for 404
     path: '/:pathMatch(.*)*',
-    redirect: '/admin/dashboard'
+    redirect: '/admin/profiles'
   }
 ]
 
