@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
+// Root component - router-view will render the appropriate layout/view
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-    <HelloWorld msg="Welcome to Vue 3 + TypeScript + Tailwind CSS" />
-  </div>
+  <router-view />
 </template>
