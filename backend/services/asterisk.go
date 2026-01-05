@@ -309,7 +309,14 @@ func (g *AsteriskGenerator) generateTftpboot() error {
 	dir := filepath.Join(g.OutputDir, "tftpboot")
 
 	for _, r := range g.Records {
-		// Условия: 4 цифры ext, есть тип телефона, активен, есть MAC, есть VLAN
+		// Условия из VBA:
+		// - IsActive = true
+		// - MAC >= 12 символов
+		// - VoipVLAN, LanVLAN, SIPServer не пустые
+		// - Тип телефона: T27 OR T23 OR Fanvil
+		// - НЕ Cisco/Fax
+		// - НЕ Сотовый клиент
+		// - НЕ ExtraRingGroup
 		if !r.IsActive {
 			continue
 		}
@@ -320,6 +327,15 @@ func (g *AsteriskGenerator) generateTftpboot() error {
 			continue
 		}
 		if !r.IsT27 && !r.IsT23 && !r.IsFanvil {
+			continue
+		}
+		if r.IsCiscoOrFax {
+			continue
+		}
+		if r.IsMobileClient {
+			continue
+		}
+		if r.ExtraRingGroup == "1" {
 			continue
 		}
 
@@ -468,15 +484,31 @@ func (g *AsteriskGenerator) generateYealinkT27Config(r PhoneRecord) string {
 	return sb.String()
 }
 
+// HasDeviceType проверяет наличие типа устройства
+func (r *PhoneRecord) HasDeviceType() bool {
+	return r.IsT27 || r.IsT23 || r.IsRadio || r.IsCiscoOrFax || r.IsMobileClient || r.IsFanvil
+}
+
 // generateUsersConf генерирует конфиги пользователей SIP
 func (g *AsteriskGenerator) generateUsersConf() error {
 	dir := filepath.Join(g.OutputDir, "UsersConf")
 
 	for _, r := range g.Records {
+		// Условия из VBA:
+		// - IsActive = true
+		// - Location и Subnet не пустые
+		// - Есть тип устройства (T27/T23/Радио/Cisco/Сотовый/Fanvil)
+		// - НЕ ExtraRingGroup
 		if !r.IsActive {
 			continue
 		}
 		if r.Location == "" || r.Subnet == "" {
+			continue
+		}
+		if !r.HasDeviceType() {
+			continue
+		}
+		if r.ExtraRingGroup == "1" {
 			continue
 		}
 
@@ -687,6 +719,12 @@ func (g *AsteriskGenerator) generateRingGroups(dir string) error {
 		sbVMCFG.WriteString(fmt.Sprintf("exten => 2,2,Voicemail(%s,s)\n\n", first.Extension))
 	}
 
+	// Статические записи для ExtensionsRG.conf (из VBA)
+	sbRG.WriteString("\n; Статические записи\n")
+	sbRG.WriteString("exten => 6246,1,Goto(ringroups-947947-6246,s,1)\n")
+	sbRG.WriteString("exten => 6293,1,Goto(ringroups-947994-6293,s,1)\n")
+	sbRG.WriteString("exten => 6097,1,Goto(ringroups-947798-6097,s,1)\n")
+
 	if err := os.WriteFile(filepath.Join(dir, "ExtensionsRG.conf"), []byte(sbRG.String()), 0644); err != nil {
 		return err
 	}
@@ -822,6 +860,15 @@ func (g *AsteriskGenerator) generateTrunks(dir string) error {
 			sbAdm.WriteString(entry)
 		}
 	}
+
+	// Статические записи для trunk_3 (Администрация) - из VBA
+	sbAdm.WriteString("\n; Статические записи\n")
+	sbAdm.WriteString("exten => _947947,1,Macro(recording,${CALLERID(num)},${EXTEN})\n")
+	sbAdm.WriteString("exten => _947947,2,Goto(voicemenu-947947-6246,s,1)\n")
+	sbAdm.WriteString("exten => _947994,1,Macro(recording,${CALLERID(num)},${EXTEN})\n")
+	sbAdm.WriteString("exten => _947994,2,Goto(voicemenu-947994-6293,s,1)\n")
+	sbAdm.WriteString("exten => _947798,1,Macro(recording,${CALLERID(num)},${EXTEN})\n")
+	sbAdm.WriteString("exten => _947798,2,Goto(voicemenu-947798-6097,s,1)\n")
 
 	if err := os.WriteFile(filepath.Join(dir, "ExtensionsTrunkZags.conf"), []byte(sbZags.String()), 0644); err != nil {
 		return err
