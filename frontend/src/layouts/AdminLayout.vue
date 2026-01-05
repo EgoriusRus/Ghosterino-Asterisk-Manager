@@ -1,13 +1,18 @@
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { useAuth } from '@/stores/auth'
 import {
   mdiAccountGroup,
   mdiCellphone,
   mdiMapMarker,
-  mdiPhoneVoip
+  mdiPhoneVoip,
+  mdiLogout,
+  mdiAccount
 } from '@mdi/js'
 
 const route = useRoute()
+const router = useRouter()
+const { user, logout } = useAuth()
 
 const menuItems = [
   {
@@ -32,6 +37,11 @@ const menuItems = [
 
 const isActiveRoute = (path: string): boolean => {
   return route.path === path
+}
+
+const handleLogout = () => {
+  logout()
+  router.push('/login')
 }
 </script>
 
@@ -67,6 +77,29 @@ const isActiveRoute = (path: string): boolean => {
           class="mb-1"
         />
       </v-list>
+
+      <template #append>
+        <div class="pa-2">
+          <v-divider class="mb-2" />
+          <v-list-item
+            :prepend-icon="mdiAccount"
+            :title="user?.username || 'Пользователь'"
+            :subtitle="user?.role === 'admin' ? 'Администратор' : 'Пользователь'"
+            density="compact"
+            class="mb-2"
+          />
+          <v-btn
+            :prepend-icon="mdiLogout"
+            variant="tonal"
+            color="white"
+            block
+            size="small"
+            @click="handleLogout"
+          >
+            Выйти
+          </v-btn>
+        </div>
+      </template>
     </v-navigation-drawer>
 
     <v-main class="bg-background">

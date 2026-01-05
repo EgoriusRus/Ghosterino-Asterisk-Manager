@@ -30,8 +30,16 @@ func main() {
 	}
 	fmt.Println("✅ Миграции выполнены успешно")
 
+	// Создаем дефолтного админа
+	fmt.Println("\n👤 Проверка пользователя admin...")
+	if err := repos.CreateDefaultAdmin(); err != nil {
+		log.Fatalf("❌ Ошибка создания админа: %v", err)
+	}
+	fmt.Println("✅ Пользователь admin готов")
+
 	// Создаём handler
 	h := handlers.NewHandler(repos)
+	authHandler := handlers.NewAuthHandler(h)
 
 	// Создаём Fiber приложение
 	app := fiber.New(fiber.Config{
@@ -50,7 +58,7 @@ func main() {
 	}))
 
 	// Инициализируем роуты
-	initRoutes(app, h)
+	initRoutes(app, h, authHandler)
 
 	// Запускаем сервер
 	port := os.Getenv("APP_PORT")

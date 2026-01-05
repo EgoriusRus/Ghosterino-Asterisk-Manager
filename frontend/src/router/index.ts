@@ -1,11 +1,22 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
+import { useAuth } from '@/stores/auth'
 import AdminLayout from '@/layouts/AdminLayout.vue'
+import LoginView from '@/views/LoginView.vue'
 import ProfilesView from '@/views/ProfilesView.vue'
 import DevicesView from '@/views/DevicesView.vue'
 import LocationsView from '@/views/LocationsView.vue'
 
 const routes: RouteRecordRaw[] = [
+  {
+    path: '/login',
+    name: 'login',
+    component: LoginView,
+    meta: {
+      title: 'Вход',
+      requiresAuth: false
+    }
+  },
   {
     path: '/',
     redirect: '/admin/profiles'
@@ -13,6 +24,9 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/admin',
     component: AdminLayout,
+    meta: {
+      requiresAuth: true
+    },
     children: [
       {
         path: '',
@@ -59,18 +73,17 @@ const router = createRouter({
   routes
 })
 
-// Navigation guard for authentication (placeholder)
+// Navigation guard for authentication
 router.beforeEach((to, _from, next) => {
+  const { isAuthenticated } = useAuth()
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
 
-  // In production, check actual auth state from store/API
-  // const isAuthenticated = useAuthStore().isAuthenticated
-  const isAuthenticated = true // Mock: always authenticated for now
-
-  if (requiresAuth && !isAuthenticated) {
+  if (requiresAuth && !isAuthenticated.value) {
     // Redirect to login page
-    // next('/login')
-    next()
+    next('/login')
+  } else if (to.path === '/login' && isAuthenticated.value) {
+    // Already logged in, redirect to admin
+    next('/admin/profiles')
   } else {
     next()
   }

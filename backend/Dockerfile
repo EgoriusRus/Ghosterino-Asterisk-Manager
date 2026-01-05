@@ -5,10 +5,11 @@ WORKDIR /app
 
 # Копируем go.mod и go.sum для кэширования зависимостей
 COPY go.mod go.sum ./
-RUN go mod download
+RUN go mod download && go mod tidy
 
 # Копируем исходный код
 COPY . .
+RUN go mod tidy
 
 # Собираем все бинарники
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .

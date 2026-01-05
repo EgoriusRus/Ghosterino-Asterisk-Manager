@@ -6,6 +6,7 @@ import type {
   PaginationParams,
   PaginatedResult
 } from '@/types/api'
+import { useAuth } from '@/stores/auth'
 
 // API base URL - can be configured via environment variables
 // In Docker: nginx proxies /api to backend
@@ -15,15 +16,25 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 // Generic fetch wrapper with error handling
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`
+  const { getToken, logout } = useAuth()
+  const token = getToken()
 
   try {
     const response = await fetch(url, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         ...options?.headers,
       },
     })
+
+    // Handle 401 Unauthorized - logout and redirect
+    if (response.status === 401) {
+      logout()
+      window.location.href = '/login'
+      throw new Error('Unauthorized')
+    }
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)

@@ -4,11 +4,12 @@ import (
 	"os"
 
 	"asterisk-manager/handlers"
+	"asterisk-manager/middleware"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-func initRoutes(app *fiber.App, h *handlers.Handler) {
+func initRoutes(app *fiber.App, h *handlers.Handler, authHandler *handlers.AuthHandler) {
 	// Health check
 	app.Get("/", func(c *fiber.Ctx) error {
 		version := os.Getenv("APP_VERSION")
@@ -21,8 +22,18 @@ func initRoutes(app *fiber.App, h *handlers.Handler) {
 	// API группа
 	api := app.Group("/api")
 
+	// Auth endpoints (без авторизации)
+	auth := api.Group("/auth")
+	auth.Post("/login", authHandler.Login)
+
+	// Защищенные эндпоинты
+	protected := api.Group("/", middleware.JWTAuth(authHandler.GetAuthService()))
+
+	// Auth me endpoint (с авторизацией)
+	protected.Get("auth/me", authHandler.Me)
+
 	// Profiles endpoints
-	profiles := api.Group("/profiles")
+	profiles := protected.Group("profiles")
 	profiles.Get("/", h.Pagination, h.GetProfiles)
 	profiles.Get("/:id", h.GetProfile)
 	profiles.Post("/", h.CreateProfile)
@@ -30,7 +41,7 @@ func initRoutes(app *fiber.App, h *handlers.Handler) {
 	profiles.Delete("/:id", h.DeleteProfile)
 
 	// Devices endpoints
-	devices := api.Group("/devices")
+	devices := protected.Group("devices")
 	devices.Get("/", h.GetDevices)
 	devices.Get("/:mac", h.GetDevice)
 	devices.Post("/", h.CreateDevice)
@@ -38,7 +49,7 @@ func initRoutes(app *fiber.App, h *handlers.Handler) {
 	devices.Delete("/:mac", h.DeleteDevice)
 
 	// Locations endpoints
-	locations := api.Group("/locations")
+	locations := protected.Group("locations")
 	locations.Get("/", h.GetLocations)
 	locations.Get("/:id", h.GetLocation)
 	locations.Post("/", h.CreateLocation)
@@ -46,6 +57,6 @@ func initRoutes(app *fiber.App, h *handlers.Handler) {
 	locations.Delete("/:id", h.DeleteLocation)
 
 	// Generator endpoints
-	generator := api.Group("/generator")
+	generator := protected.Group("generator")
 	_ = generator // TODO: добавить handlers для generator
 }

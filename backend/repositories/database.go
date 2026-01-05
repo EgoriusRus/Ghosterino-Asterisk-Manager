@@ -88,6 +88,7 @@ func (rs *Repos) MigrateDB() error {
 		&domain.Location{},
 		&domain.Device{},
 		&domain.Profile{},
+		&domain.User{},
 	)
 	if err != nil {
 		return errors.WithStack(err)
@@ -206,6 +207,32 @@ func (rs *Repos) FindProfilesWithLocations(isActive *bool, pagination *domain.Pa
 // Exec выполняет raw SQL запрос
 func (rs *Repos) Exec(sql string) error {
 	return rs.db.Exec(sql).Error
+}
+
+// FindUserByUsername находит пользователя по username
+func (rs *Repos) FindUserByUsername(dest *domain.User, username string) error {
+	return rs.db.Where("username = ?", username).First(dest).Error
+}
+
+// CreateDefaultAdmin создает пользователя admin если его нет
+func (rs *Repos) CreateDefaultAdmin() error {
+	var user domain.User
+	err := rs.FindUserByUsername(&user, "admin")
+	if err == nil {
+		// Пользователь уже существует
+		return nil
+	}
+
+	// Создаем админа
+	admin := domain.User{
+		Username: "admin",
+		Role:     domain.UserRoleAdmin,
+	}
+	if err := admin.SetPassword("admin"); err != nil {
+		return errors.Wrap(err, "failed to set admin password")
+	}
+
+	return rs.Save(&admin)
 }
 
 // ConnectionString формирует строку подключения к PostgreSQL

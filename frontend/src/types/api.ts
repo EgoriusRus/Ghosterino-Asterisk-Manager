@@ -1,5 +1,25 @@
 // API Types matching backend Go models
 
+// User types
+export type UserRole = 'admin' | 'user'
+
+export interface User {
+  id: number
+  username: string
+  role: UserRole
+  createdAt: string
+}
+
+export interface LoginRequest {
+  username: string
+  password: string
+}
+
+export interface LoginResponse {
+  token: string
+  user: User
+}
+
 // Device Models (enum from backend)
 export type DeviceModel = 'Yealink T27G' | 'Yealink T23G' | 'Fanvil' | 'Cisco'
 
