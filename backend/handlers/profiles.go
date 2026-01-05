@@ -6,13 +6,34 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// GetProfiles возвращает список всех профилей
+// GetProfiles возвращает список всех профилей с пагинацией
 func (h *Handler) GetProfiles(c *fiber.Ctx) error {
-	profiles, err := h.repos.FindProfilesWithLocations(nil)
+	// Get pagination from context (set by middleware)
+	pagination, ok := c.Locals("pagination").(*domain.PaginationInput)
+	if !ok {
+		return fiber.NewError(fiber.StatusInternalServerError, "Pagination not found in context")
+	}
+
+	// Get profiles with pagination
+	profiles, total, err := h.repos.FindProfilesWithLocations(nil, pagination)
 	if err != nil {
 		return err
 	}
-	return c.JSON(profiles)
+
+	// Build response with pagination metadata
+	paginationResponse := domain.PaginationResponse{
+		Total:   total,
+		Page:    pagination.Page,
+		PerPage: pagination.PerPage,
+	}
+	paginationResponse.CalculatePages()
+
+	result := domain.PaginatedResult{
+		Data:       profiles,
+		Pagination: paginationResponse,
+	}
+
+	return c.JSON(result)
 }
 
 // GetProfile возвращает один профиль по ID

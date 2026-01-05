@@ -15,6 +15,16 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+// applyPagination applies pagination (LIMIT and OFFSET) to a Gorm query
+func applyPagination(query *gorm.DB, pagination *domain.PaginationInput) *gorm.DB {
+	if pagination == nil {
+		return query
+	}
+
+	offset := (pagination.Page - 1) * pagination.PerPage
+	return query.Limit(pagination.PerPage).Offset(offset)
+}
+
 type Repos struct {
 	db *gorm.DB
 	// Здесь будут добавлены репозитории для конкретных сущностей
@@ -154,8 +164,9 @@ func (rs *Repos) FindOne(dest interface{}, condition string, args ...interface{}
 }
 
 // FindProfilesWithLocations находит профили с джойном к локациям
-func (rs *Repos) FindProfilesWithLocations(isActive *bool) ([]domain.ProfileWithLocation, error) {
+func (rs *Repos) FindProfilesWithLocations(isActive *bool, pagination *domain.PaginationInput) ([]domain.ProfileWithLocation, int64, error) {
 	var profiles []domain.ProfileWithLocation
+	var total int64
 
 	query := rs.db.Table("sipadmin.profiles AS p").
 		Select(`
@@ -170,8 +181,20 @@ func (rs *Repos) FindProfilesWithLocations(isActive *bool) ([]domain.ProfileWith
 		query = query.Where("p.is_active = ?", *isActive)
 	}
 
+	// Get total count before pagination
+	countQuery := rs.db.Table("sipadmin.profiles AS p")
+	if isActive != nil {
+		countQuery = countQuery.Where("p.is_active = ?", *isActive)
+	}
+	if err := countQuery.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// Apply pagination
+	query = applyPagination(query, pagination)
+
 	err := query.Scan(&profiles).Error
-	return profiles, err
+	return profiles, total, err
 }
 
 // Exec выполняет raw SQL запрос

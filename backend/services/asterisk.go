@@ -119,7 +119,7 @@ func (g *AsteriskGenerator) LoadCSV(filename string) error {
 // LoadFromDatabase загружает данные из базы данных
 func (g *AsteriskGenerator) LoadFromDatabase(repos *repositories.Repos) error {
 	isActive := true
-	profiles, err := repos.FindProfilesWithLocations(&isActive)
+	profiles, _, err := repos.FindProfilesWithLocations(&isActive, nil)
 	if err != nil {
 		return fmt.Errorf("ошибка загрузки профилей: %w", err)
 	}

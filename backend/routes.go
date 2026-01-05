@@ -23,7 +23,7 @@ func initRoutes(app *fiber.App, h *handlers.Handler) {
 
 	// Profiles endpoints
 	profiles := api.Group("/profiles")
-	profiles.Get("/", h.GetProfiles)
+	profiles.Get("/", h.Pagination, h.GetProfiles)
 	profiles.Get("/:id", h.GetProfile)
 	profiles.Post("/", h.CreateProfile)
 	profiles.Put("/:id", h.UpdateProfile)

@@ -146,7 +146,10 @@ make test          # Запустить тесты
 ## REST API Endpoints
 
 ### Профили (Сотрудники)
-- `GET /api/profiles` - Список всех профилей с данными локаций (JOIN)
+- `GET /api/profiles` - Список всех профилей с данными локаций (JOIN) и пагинацией
+  - Query параметры:
+    - `?page=1` - Номер страницы (по умолчанию: 1)
+    - `?perPage=10` - Количество записей на странице (по умолчанию: 10, максимум: 100)
 - `GET /api/profiles/:id` - Один профиль по ID
 - `POST /api/profiles` - Создать новый профиль
 - `PUT /api/profiles/:id` - Обновить профиль
@@ -168,9 +171,31 @@ make test          # Запустить тесты
 
 ### Примеры использования API
 
-**Получить все профили:**
+**Получить все профили (с пагинацией):**
 ```bash
+# Получить первую страницу (10 записей)
 curl http://localhost:8080/api/profiles
+
+# Получить вторую страницу с 20 записями на странице
+curl "http://localhost:8080/api/profiles?page=2&perPage=20"
+
+# Пример ответа с пагинацией:
+{
+  "data": [
+    {
+      "id": 1,
+      "name": "Иванов Иван Иванович",
+      "email": "ivanov@example.com",
+      ...
+    }
+  ],
+  "pagination": {
+    "total": 100,
+    "page": 2,
+    "perPage": 20,
+    "pages": 5
+  }
+}
 ```
 
 **Создать новый профиль:**
@@ -243,8 +268,12 @@ repos.FindByID(&profile, id)   // По ID
 repos.FindOne(&device, "mac = ?", mac)  // По условию
 
 // Специальные методы с JOIN
-repos.FindProfilesWithLocations(isActive)  // Профили + локации через LEFT JOIN
+repos.FindProfilesWithLocations(isActive, pagination)  // Профили + локации через LEFT JOIN с пагинацией
 repos.Exec(sql)                // Raw SQL (только для seed/migrations)
+
+// Пагинация
+pagination := &domain.PaginationInput{Page: 1, PerPage: 10}
+profiles, total, err := repos.FindProfilesWithLocations(nil, pagination)
 ```
 
 ### Database Seeder

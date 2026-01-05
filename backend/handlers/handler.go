@@ -3,6 +3,7 @@ package handlers
 import (
 	"log"
 
+	"asterisk-manager/domain"
 	"asterisk-manager/repositories"
 
 	"github.com/gofiber/fiber/v2"
@@ -22,6 +23,24 @@ func NewHandler(repos *repositories.Repos) *Handler {
 // ErrorResponse структура ответа с ошибкой
 type ErrorResponse struct {
 	Error string `json:"error"`
+}
+
+// Pagination middleware parses and validates pagination query parameters
+func (h *Handler) Pagination(c *fiber.Ctx) error {
+	var pagination domain.PaginationInput
+
+	// Parse query parameters
+	if err := c.QueryParser(&pagination); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid pagination parameters")
+	}
+
+	// Validate and set defaults
+	pagination.Validate()
+
+	// Store in context
+	c.Locals("pagination", &pagination)
+
+	return c.Next()
 }
 
 // ErrorHandler централизованная обработка ошибок
