@@ -51,6 +51,12 @@ func main() {
 		log.Fatalf("❌ Ошибка заполнения профилей: %v", err)
 	}
 
+	// Пользователи
+	fmt.Println("  → Пользователи...")
+	if err := seedUsers(repos); err != nil {
+		log.Fatalf("❌ Ошибка заполнения пользователей: %v", err)
+	}
+
 	fmt.Println("\n✅ Все данные успешно загружены!")
 }
 
@@ -218,5 +224,27 @@ func seedProfiles(repos *repositories.Repos) error {
 			return fmt.Errorf("создание профиля %s: %w", profile.Name, err)
 		}
 	}
+	return nil
+}
+
+func seedUsers(repos *repositories.Repos) error {
+	// Удаляем существующих пользователей
+	if err := repos.DeleteAll(&domain.User{}); err != nil {
+		return fmt.Errorf("очистка users: %w", err)
+	}
+	repos.Exec("ALTER SEQUENCE sipadmin.users_id_seq RESTART WITH 1")
+
+	// Создаём админа
+	admin := domain.User{
+		Username: "admin",
+		Role:     domain.UserRoleAdmin,
+	}
+	if err := admin.SetPassword("admin"); err != nil {
+		return fmt.Errorf("установка пароля admin: %w", err)
+	}
+	if err := repos.Create(&admin); err != nil {
+		return fmt.Errorf("создание пользователя admin: %w", err)
+	}
+
 	return nil
 }
