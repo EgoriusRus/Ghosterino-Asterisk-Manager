@@ -1,16 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 import {
   mdiAccountGroup,
   mdiCellphone,
   mdiMapMarker,
-  mdiMenu
+  mdiPhoneVoip
 } from '@mdi/js'
 
 const route = useRoute()
-const drawer = ref(true)
-const rail = ref(false)
 
 const menuItems = [
   {
@@ -41,27 +38,24 @@ const isActiveRoute = (path: string): boolean => {
 <template>
   <v-app>
     <v-navigation-drawer
-      v-model="drawer"
-      :rail="rail"
       permanent
+      color="primary"
     >
-      <v-list-item
-        title="Asterisk Manager"
-        nav
-      >
-        <template #append>
-          <v-btn
-            :icon="mdiMenu"
-            variant="text"
-            size="small"
-            @click="rail = !rail"
-          />
+      <v-list-item class="py-4">
+        <template #prepend>
+          <v-icon :icon="mdiPhoneVoip" size="28" />
         </template>
+        <v-list-item-title class="text-h6 font-weight-bold">
+          Asterisk
+        </v-list-item-title>
+        <v-list-item-subtitle class="text-caption">
+          Manager
+        </v-list-item-subtitle>
       </v-list-item>
 
-      <v-divider />
+      <v-divider class="my-2" />
 
-      <v-list nav density="comfortable">
+      <v-list nav density="comfortable" class="px-2">
         <v-list-item
           v-for="item in menuItems"
           :key="item.id"
@@ -69,15 +63,25 @@ const isActiveRoute = (path: string): boolean => {
           :prepend-icon="item.icon"
           :title="item.label"
           :active="isActiveRoute(item.path)"
-          color="primary"
+          rounded="lg"
+          class="mb-1"
         />
       </v-list>
     </v-navigation-drawer>
 
-    <v-main>
+    <v-main class="bg-background">
       <v-container fluid class="pa-6">
         <router-view />
       </v-container>
     </v-main>
   </v-app>
 </template>
+
+<style scoped>
+.v-navigation-drawer :deep(.v-list-item--active) {
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+.v-navigation-drawer :deep(.v-list-item:hover:not(.v-list-item--active)) {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+</style>

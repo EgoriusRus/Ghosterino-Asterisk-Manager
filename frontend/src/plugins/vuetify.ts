@@ -21,31 +21,60 @@ export default createVuetify({
     defaultTheme: 'light',
     themes: {
       light: {
+        dark: false,
         colors: {
-          primary: '#4f46e5',
-          secondary: '#6b7280',
-          error: '#ef4444',
-          success: '#22c55e',
-          warning: '#f59e0b',
-          info: '#3b82f6'
+          background: '#f8fafc',
+          surface: '#ffffff',
+          'surface-variant': '#f1f5f9',
+          primary: '#1e293b',
+          'primary-darken-1': '#0f172a',
+          secondary: '#64748b',
+          'secondary-darken-1': '#475569',
+          error: '#dc2626',
+          warning: '#d97706',
+          info: '#0284c7',
+          success: '#059669',
+          'on-background': '#1e293b',
+          'on-surface': '#334155',
+          'on-primary': '#ffffff',
+          'on-secondary': '#ffffff'
         }
       }
     }
   },
   defaults: {
     VBtn: {
-      variant: 'flat'
+      variant: 'flat',
+      rounded: 'lg'
+    },
+    VCard: {
+      rounded: 'lg',
+      elevation: 1
     },
     VTextField: {
       variant: 'outlined',
-      density: 'comfortable'
+      density: 'comfortable',
+      rounded: 'lg'
     },
     VSelect: {
       variant: 'outlined',
+      density: 'comfortable',
+      rounded: 'lg'
+    },
+    VCheckbox: {
       density: 'comfortable'
     },
-    VDataTableServer: {
+    VDataTable: {
       density: 'comfortable'
+    },
+    VDialog: {
+      rounded: 'lg'
+    },
+    VChip: {
+      rounded: 'lg'
+    },
+    VAlert: {
+      rounded: 'lg'
     }
   }
 })
