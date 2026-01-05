@@ -127,7 +127,7 @@ func (g *AsteriskGenerator) LoadFromDatabase(repos *repositories.Repos) error {
 	// Загружаем устройства
 	var devices []domain.Device
 	deviceMap := make(map[string]domain.Device)
-	if err := repos.FindAll(&devices); err != nil {
+	if err := repos.FindAllDevices(&devices); err != nil {
 		return fmt.Errorf("ошибка загрузки устройств: %w", err)
 	}
 	for _, dev := range devices {

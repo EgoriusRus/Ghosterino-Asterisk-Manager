@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"asterisk-manager/domain"
 	"asterisk-manager/repositories"
 )
 
@@ -54,66 +55,168 @@ func main() {
 }
 
 func cleanTables(repos *repositories.Repos) error {
-	queries := []string{
-		"DELETE FROM sipadmin.profiles",
-		"DELETE FROM sipadmin.devices",
-		"DELETE FROM sipadmin.locations",
-		"ALTER SEQUENCE sipadmin.profiles_id_seq RESTART WITH 1",
-		"ALTER SEQUENCE sipadmin.locations_id_seq RESTART WITH 1",
+	// Удаляем в правильном порядке (сначала зависимые таблицы)
+	if err := repos.DeleteAll(&domain.Profile{}); err != nil {
+		return fmt.Errorf("очистка profiles: %w", err)
+	}
+	if err := repos.DeleteAll(&domain.Device{}); err != nil {
+		return fmt.Errorf("очистка devices: %w", err)
+	}
+	if err := repos.DeleteAll(&domain.Location{}); err != nil {
+		return fmt.Errorf("очистка locations: %w", err)
 	}
 
-	for _, query := range queries {
-		if err := repos.Exec(query); err != nil {
-			return err
-		}
-	}
+	// Сбрасываем последовательности
+	repos.Exec("ALTER SEQUENCE sipadmin.profiles_id_seq RESTART WITH 1")
+	repos.Exec("ALTER SEQUENCE sipadmin.locations_id_seq RESTART WITH 1")
 
 	return nil
 }
 
 func seedLocations(repos *repositories.Repos) error {
-	sql := `
-		INSERT INTO sipadmin.locations (name, server, subnet, voip_vlan, vlan) VALUES
-		('Zags', '10.16.0.102', '10.1.191.0/26', 5, 601),
-		('Sov', '10.16.0.102', '10.1.191.0/26', 5, 6),
-		('Nad3', '10.16.0.102', '10.1.17.0/24', 65, 8),
-		('Ubil1', '10.16.0.102', '10.1.80.0/24', 4, 266),
-		('Ind4', '10.16.0.102', '10.1.96.0/25', 65, 49),
-		('Len15v', '10.16.0.102', '10.1.96.128/25', 65, 10)
-	`
-	return repos.Exec(sql)
+	locations := []domain.Location{
+		{Name: "Zags", Server: "10.16.0.102", Subnet: "10.1.191.0/26", VoipVLAN: 5, VLAN: 601},
+		{Name: "Sov", Server: "10.16.0.102", Subnet: "10.1.191.0/26", VoipVLAN: 5, VLAN: 6},
+		{Name: "Nad3", Server: "10.16.0.102", Subnet: "10.1.17.0/24", VoipVLAN: 65, VLAN: 8},
+		{Name: "Ubil1", Server: "10.16.0.102", Subnet: "10.1.80.0/24", VoipVLAN: 4, VLAN: 266},
+		{Name: "Ind4", Server: "10.16.0.102", Subnet: "10.1.96.0/25", VoipVLAN: 65, VLAN: 49},
+		{Name: "Len15v", Server: "10.16.0.102", Subnet: "10.1.96.128/25", VoipVLAN: 65, VLAN: 10},
+	}
+
+	for _, loc := range locations {
+		if err := repos.Create(&loc); err != nil {
+			return fmt.Errorf("создание локации %s: %w", loc.Name, err)
+		}
+	}
+	return nil
 }
 
 func seedDevices(repos *repositories.Repos) error {
-	sql := `
-		INSERT INTO sipadmin.devices (mac, device_model) VALUES
-		('80:5e:c0:b4:42:7c', 'Yealink T23G'),
-		('80:5e:c0:18:ab:ac', 'Yealink T27G'),
-		('80:5e:c0:e4:a2:fa', 'Yealink T27G'),
-		('80:5e:c0:81:d1:6a', 'Yealink T27G'),
-		('80:5e:c0:4e:68:c6', 'Yealink T27G'),
-		('80:5e:c0:e4:a0:3d', 'Yealink T27G'),
-		('80:5e:c0:4e:68:61', 'Yealink T27G'),
-		('0c:38:3e:40:3e:52', 'Cisco'),
-		('1c:e6:c7:99:19:55', 'Cisco'),
-		('44:db:d2:5e:36:83', 'Yealink T27G')
-	`
-	return repos.Exec(sql)
+	devices := []domain.Device{
+		{MAC: "80:5e:c0:b4:42:7c", DeviceModel: domain.DeviceModelYealinkT23G},
+		{MAC: "80:5e:c0:18:ab:ac", DeviceModel: domain.DeviceModelYealinkT27G},
+		{MAC: "80:5e:c0:e4:a2:fa", DeviceModel: domain.DeviceModelYealinkT27G},
+		{MAC: "80:5e:c0:81:d1:6a", DeviceModel: domain.DeviceModelYealinkT27G},
+		{MAC: "80:5e:c0:4e:68:c6", DeviceModel: domain.DeviceModelYealinkT27G},
+		{MAC: "80:5e:c0:e4:a0:3d", DeviceModel: domain.DeviceModelYealinkT27G},
+		{MAC: "80:5e:c0:4e:68:61", DeviceModel: domain.DeviceModelYealinkT27G},
+		{MAC: "0c:38:3e:40:3e:52", DeviceModel: domain.DeviceModelCisco},
+		{MAC: "1c:e6:c7:99:19:55", DeviceModel: domain.DeviceModelCisco},
+		{MAC: "44:db:d2:5e:36:83", DeviceModel: domain.DeviceModelYealinkT27G},
+	}
+
+	for _, dev := range devices {
+		if err := repos.Create(&dev); err != nil {
+			return fmt.Errorf("создание устройства %s: %w", dev.MAC, err)
+		}
+	}
+	return nil
 }
 
 func seedProfiles(repos *repositories.Repos) error {
-	sql := `
-		INSERT INTO sipadmin.profiles (name, email, device, location_id, internal_number, external_number, ring_group, pickup_group, is_active) VALUES
-		('Лычкина Елена Владимировна', NULL, '80:5e:c0:b4:42:7c', 1, 1119, '244842', 6008, NULL, true),
-		('Кривошеев Олег Викторович', NULL, '80:5e:c0:18:ab:ac', 3, 1058, '947719', 6018, NULL, true),
-		('Степанов Александр Александрович', NULL, '80:5e:c0:e4:a2:fa', 3, 1048, '947862', 6161, NULL, true),
-		('Дудко Юлия Владимировна', NULL, '80:5e:c0:81:d1:6a', 3, 1059, '947740', 6039, 5, true),
-		('Кожокарь Ольга Рафаиловна', NULL, '80:5e:c0:4e:68:c6', 3, 1026, '947740', 6039, 5, true),
-		('Забелкин Александр Иванович', NULL, '80:5e:c0:e4:a0:3d', 3, 1086, '947795', 6094, NULL, true),
-		('Корсунова Елизавета Васильевна', NULL, '80:5e:c0:4e:68:61', 3, 1076, '947794', 6093, NULL, true),
-		('Головина Наталья Ивановна', NULL, NULL, 2, 1100, '947855', 6154, NULL, true),
-		('Котенко Анна Владимировна', NULL, '1c:e6:c7:99:19:55', 2, 1108, '947857', 6156, NULL, true),
-		('Воловенко Анатолий Сергеевич', NULL, '44:db:d2:5e:36:83', 5, 1666, '930778', 6392, NULL, true)
-	`
-	return repos.Exec(sql)
+	// Хелперы для указателей
+	uintPtr := func(i uint) *uint { return &i }
+	intPtr := func(i int) *int { return &i }
+	strPtr := func(s string) *string { return &s }
+
+	profiles := []domain.Profile{
+		{
+			Name:           "Лычкина Елена Владимировна",
+			Device:         strPtr("80:5e:c0:b4:42:7c"),
+			LocationID:     uintPtr(1),
+			InternalNumber: 1119,
+			ExternalNumber: "244842",
+			RingGroup:      intPtr(6008),
+			IsActive:       true,
+		},
+		{
+			Name:           "Кривошеев Олег Викторович",
+			Device:         strPtr("80:5e:c0:18:ab:ac"),
+			LocationID:     uintPtr(3),
+			InternalNumber: 1058,
+			ExternalNumber: "947719",
+			RingGroup:      intPtr(6018),
+			IsActive:       true,
+		},
+		{
+			Name:           "Степанов Александр Александрович",
+			Device:         strPtr("80:5e:c0:e4:a2:fa"),
+			LocationID:     uintPtr(3),
+			InternalNumber: 1048,
+			ExternalNumber: "947862",
+			RingGroup:      intPtr(6161),
+			IsActive:       true,
+		},
+		{
+			Name:           "Дудко Юлия Владимировна",
+			Device:         strPtr("80:5e:c0:81:d1:6a"),
+			LocationID:     uintPtr(3),
+			InternalNumber: 1059,
+			ExternalNumber: "947740",
+			RingGroup:      intPtr(6039),
+			PickupGroup:    intPtr(5),
+			IsActive:       true,
+		},
+		{
+			Name:           "Кожокарь Ольга Рафаиловна",
+			Device:         strPtr("80:5e:c0:4e:68:c6"),
+			LocationID:     uintPtr(3),
+			InternalNumber: 1026,
+			ExternalNumber: "947740",
+			RingGroup:      intPtr(6039),
+			PickupGroup:    intPtr(5),
+			IsActive:       true,
+		},
+		{
+			Name:           "Забелкин Александр Иванович",
+			Device:         strPtr("80:5e:c0:e4:a0:3d"),
+			LocationID:     uintPtr(3),
+			InternalNumber: 1086,
+			ExternalNumber: "947795",
+			RingGroup:      intPtr(6094),
+			IsActive:       true,
+		},
+		{
+			Name:           "Корсунова Елизавета Васильевна",
+			Device:         strPtr("80:5e:c0:4e:68:61"),
+			LocationID:     uintPtr(3),
+			InternalNumber: 1076,
+			ExternalNumber: "947794",
+			RingGroup:      intPtr(6093),
+			IsActive:       true,
+		},
+		{
+			Name:           "Головина Наталья Ивановна",
+			LocationID:     uintPtr(2),
+			InternalNumber: 1100,
+			ExternalNumber: "947855",
+			RingGroup:      intPtr(6154),
+			IsActive:       true,
+		},
+		{
+			Name:           "Котенко Анна Владимировна",
+			Device:         strPtr("1c:e6:c7:99:19:55"),
+			LocationID:     uintPtr(2),
+			InternalNumber: 1108,
+			ExternalNumber: "947857",
+			RingGroup:      intPtr(6156),
+			IsActive:       true,
+		},
+		{
+			Name:           "Воловенко Анатолий Сергеевич",
+			Device:         strPtr("44:db:d2:5e:36:83"),
+			LocationID:     uintPtr(5),
+			InternalNumber: 1666,
+			ExternalNumber: "930778",
+			RingGroup:      intPtr(6392),
+			IsActive:       true,
+		},
+	}
+
+	for _, profile := range profiles {
+		if err := repos.Create(&profile); err != nil {
+			return fmt.Errorf("создание профиля %s: %w", profile.Name, err)
+		}
+	}
+	return nil
 }

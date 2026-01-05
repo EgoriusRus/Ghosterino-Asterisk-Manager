@@ -149,6 +149,16 @@ func (rs *Repos) Delete(object interface{}) error {
 	return rs.db.Delete(object).Error
 }
 
+// DeleteAll удаляет все записи из таблицы
+func (rs *Repos) DeleteAll(model interface{}) error {
+	return rs.db.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(model).Error
+}
+
+// Create создает новую запись в базе данных
+func (rs *Repos) Create(object interface{}) error {
+	return rs.db.Create(object).Error
+}
+
 // FindAll находит все записи с сортировкой по ID
 func (rs *Repos) FindAll(dest interface{}) error {
 	return rs.db.Order("id ASC").Find(dest).Error
