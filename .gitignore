@@ -3,6 +3,7 @@
 
 # Результаты генерации
 backend/results/
+frontend/node_modules
 
 # Тестовые данные
 test.csv
