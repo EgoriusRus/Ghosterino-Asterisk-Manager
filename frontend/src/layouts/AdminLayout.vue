@@ -1,57 +1,83 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import Sidebar from './components/Sidebar.vue'
+import { useRoute } from 'vue-router'
+import {
+  mdiAccountGroup,
+  mdiCellphone,
+  mdiMapMarker,
+  mdiMenu
+} from '@mdi/js'
 
-// Sidebar state management (mobile only)
-const isMobileSidebarOpen = ref(false)
+const route = useRoute()
+const drawer = ref(true)
+const rail = ref(false)
 
-const toggleMobileSidebar = () => {
-  isMobileSidebarOpen.value = !isMobileSidebarOpen.value
-}
+const menuItems = [
+  {
+    id: 'profiles',
+    label: 'Сотрудники',
+    icon: mdiAccountGroup,
+    path: '/admin/profiles'
+  },
+  {
+    id: 'devices',
+    label: 'Устройства',
+    icon: mdiCellphone,
+    path: '/admin/devices'
+  },
+  {
+    id: 'locations',
+    label: 'Локации',
+    icon: mdiMapMarker,
+    path: '/admin/locations'
+  }
+]
 
-const closeMobileSidebar = () => {
-  isMobileSidebarOpen.value = false
+const isActiveRoute = (path: string): boolean => {
+  return route.path === path
 }
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 flex">
-    <!-- Sidebar -->
-    <Sidebar
-      :is-open="isMobileSidebarOpen"
-      @close="closeMobileSidebar"
-    />
+  <v-app>
+    <v-navigation-drawer
+      v-model="drawer"
+      :rail="rail"
+      permanent
+    >
+      <v-list-item
+        title="Asterisk Manager"
+        nav
+      >
+        <template #append>
+          <v-btn
+            :icon="mdiMenu"
+            variant="text"
+            size="small"
+            @click="rail = !rail"
+          />
+        </template>
+      </v-list-item>
 
-    <!-- Main content area -->
-    <div class="flex-1 flex flex-col">
-      <!-- Mobile menu toggle button (visible only on mobile) -->
-      <div class="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center">
-        <button
-          @click="toggleMobileSidebar"
-          class="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
-          aria-label="Toggle mobile menu"
-        >
-          <svg
-            class="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M4 6h16M4 12h16M4 18h16"
-            />
-          </svg>
-        </button>
-        <h1 class="ml-3 text-lg font-semibold text-gray-800">Admin Panel</h1>
-      </div>
+      <v-divider />
 
-      <!-- Main content -->
-      <main class="flex-1 p-6 overflow-y-auto">
+      <v-list nav density="comfortable">
+        <v-list-item
+          v-for="item in menuItems"
+          :key="item.id"
+          :to="item.path"
+          :prepend-icon="item.icon"
+          :title="item.label"
+          :active="isActiveRoute(item.path)"
+          color="primary"
+        />
+      </v-list>
+    </v-navigation-drawer>
+
+    <v-main>
+      <v-container fluid class="pa-6">
         <router-view />
-      </main>
-    </div>
-  </div>
+      </v-container>
+    </v-main>
+  </v-app>
 </template>
