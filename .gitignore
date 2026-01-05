@@ -36,3 +36,14 @@ Thumbs.db
 
 # Docker volumes
 postgres_data/
+
+# Claude agents temporary files
+.claude/temp/
+.plan-request.json
+.implementation-plan.json
+.verification-report.md
+.review-report.md
+**/.plan-request.json
+**/.implementation-plan.json
+**/.verification-report.md
+**/.review-report.md
