@@ -287,6 +287,14 @@ onMounted(() => {
 
     <!-- Data table -->
     <v-card>
+      <v-card-text class="pa-0">
+        <div class="px-4 py-3 bg-grey-lighten-4">
+          <span class="text-body-2 text-medium-emphasis">
+            Всего сотрудников: <strong>{{ pagination.total }}</strong>
+          </span>
+        </div>
+      </v-card-text>
+
       <v-data-table
         :headers="headers"
         :items="profiles"
@@ -357,19 +365,21 @@ onMounted(() => {
       </v-data-table>
 
       <!-- Pagination -->
-      <v-divider v-if="pagination.pages > 1" />
-      <div v-if="pagination.pages > 1" class="pa-4 d-flex justify-space-between align-center">
-        <span class="text-body-2 text-medium-emphasis">
-          Показано {{ (pagination.page - 1) * pagination.perPage + 1 }}–{{ Math.min(pagination.page * pagination.perPage, pagination.total) }} из {{ pagination.total }}
-        </span>
-        <v-pagination
-          :model-value="pagination.page"
-          :length="pagination.pages"
-          :total-visible="5"
-          density="comfortable"
-          @update:model-value="onPageChange"
-        />
-      </div>
+      <template v-if="pagination.pages > 1">
+        <v-divider />
+        <div class="pa-4 d-flex justify-space-between align-center">
+          <span class="text-body-2 text-medium-emphasis">
+            Показано {{ (pagination.page - 1) * pagination.perPage + 1 }}–{{ Math.min(pagination.page * pagination.perPage, pagination.total) }} из {{ pagination.total }}
+          </span>
+          <v-pagination
+            :model-value="pagination.page"
+            :length="pagination.pages"
+            :total-visible="5"
+            density="comfortable"
+            @update:model-value="onPageChange"
+          />
+        </div>
+      </template>
     </v-card>
 
     <!-- Create Dialog -->
