@@ -46,6 +46,21 @@ services:
     networks:
       - asterisk-network
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: asterisk-frontend
+    restart: unless-stopped
+    environment:
+      TZ: Europe/Moscow
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      - backend
+    networks:
+      - asterisk-network
+
 volumes:
   postgres_data:
     driver: local

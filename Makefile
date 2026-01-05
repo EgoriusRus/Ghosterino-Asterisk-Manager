@@ -1,34 +1,51 @@
-.PHONY: help demo up down logs restart clean seed generator build test prod-up prod-down prod-logs prod-restart backup
+.PHONY: help demo up down logs restart clean seed generator build test prod-up prod-down prod-logs prod-restart backup dev
 
 help: ## Показать помощь
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-demo: ## Полное развертывание демо (Docker + seed + generator)
+demo: ## Полное развертывание демо (Docker + seed)
 	@echo "🚀 Запуск полного демо развертывания..."
 	@echo ""
-	@echo "📦 1/4 Поднимаем Docker Compose..."
-	@docker-compose up -d
+	@echo "📦 1/3 Поднимаем Docker Compose..."
+	@docker-compose up -d --build
 	@echo ""
-	@echo "⏳ 2/4 Ждем готовности PostgreSQL (15 сек)..."
+	@echo "⏳ 2/3 Ждем готовности PostgreSQL (15 сек)..."
 	@sleep 15
 	@echo ""
-	@echo "🌱 3/4 Заполняем базу тестовыми данными..."
+	@echo "🌱 3/3 Заполняем базу тестовыми данными..."
 	@cd backend && $(MAKE) seed
-	@echo ""
-	@echo "⚙️  4/4 Генерируем конфиги Asterisk..."
-	@cd backend && $(MAKE) generator
 	@echo ""
 	@echo "✅ Демо развернуто успешно!"
 	@echo ""
-	@echo "📍 API доступен по адресу: http://localhost:8080"
-	@echo "📍 Проверка: curl http://localhost:8080/api/profiles"
-	@echo "📍 Конфиги: ./backend/results/"
+	@echo "📍 Frontend: http://localhost:3000"
+	@echo "📍 Backend API: http://localhost:8080/api"
 	@echo ""
 
-up: ## Поднять Docker Compose
+dev: ## Запустить для разработки (backend в Docker, frontend локально)
+	@echo "🚀 Запуск в режиме разработки..."
+	@echo ""
+	@echo "📦 1/3 Поднимаем PostgreSQL и Backend..."
+	@docker-compose up -d postgres backend
+	@echo ""
+	@echo "⏳ 2/3 Ждем готовности (10 сек)..."
+	@sleep 10
+	@echo ""
+	@echo "🌱 3/3 Заполняем базу тестовыми данными..."
+	@cd backend && $(MAKE) seed
+	@echo ""
+	@echo "✅ Backend готов!"
+	@echo ""
+	@echo "📍 Backend API: http://localhost:8080/api"
+	@echo "📍 Запустите frontend: cd frontend && npm run dev"
+	@echo ""
+
+up: ## Поднять Docker Compose (все сервисы)
 	@echo "🐳 Поднимаем Docker Compose..."
 	@docker-compose up -d
 	@echo "✅ Сервисы запущены"
+	@echo ""
+	@echo "📍 Frontend: http://localhost:3000"
+	@echo "📍 Backend API: http://localhost:8080/api"
 
 down: ## Остановить Docker Compose
 	@echo "🛑 Останавливаем Docker Compose..."
@@ -45,6 +62,9 @@ logs: ## Показать логи всех сервисов
 
 logs-backend: ## Показать логи backend
 	@docker-compose logs -f backend
+
+logs-frontend: ## Показать логи frontend
+	@docker-compose logs -f frontend
 
 logs-postgres: ## Показать логи postgres
 	@docker-compose logs -f postgres
@@ -63,6 +83,16 @@ build: ## Пересобрать Docker образы
 	@docker-compose build
 	@echo "✅ Образы пересобраны"
 
+build-frontend: ## Пересобрать только frontend
+	@echo "🔨 Пересобираем frontend..."
+	@docker-compose build frontend
+	@echo "✅ Frontend пересобран"
+
+build-backend: ## Пересобрать только backend
+	@echo "🔨 Пересобираем backend..."
+	@docker-compose build backend
+	@echo "✅ Backend пересобран"
+
 clean: down ## Полная очистка (контейнеры + volumes + конфиги)
 	@echo "🗑️  Очищаем все данные..."
 	@docker-compose down -v
@@ -80,6 +110,9 @@ status: ## Показать статус сервисов
 shell-backend: ## Войти в shell backend контейнера
 	@docker-compose exec backend sh
 
+shell-frontend: ## Войти в shell frontend контейнера
+	@docker-compose exec frontend sh
+
 shell-postgres: ## Войти в psql консоль
 	@docker-compose exec postgres psql -U postgres -d asterisk_manager
 
@@ -90,15 +123,32 @@ api-test: ## Протестировать API endpoints
 	@curl -s http://localhost:8080/ && echo ""
 	@echo ""
 	@echo "GET /api/locations:"
-	@curl -s http://localhost:8080/api/locations | jq -r '.[0:2] | length' | xargs -I {} echo "  ✓ {} локации получены"
+	@curl -s http://localhost:8080/api/locations | jq -r 'length' | xargs -I {} echo "  ✓ {} локаций получено"
 	@echo ""
 	@echo "GET /api/devices:"
-	@curl -s http://localhost:8080/api/devices | jq -r '.[0:2] | length' | xargs -I {} echo "  ✓ {} устройства получены"
+	@curl -s http://localhost:8080/api/devices | jq -r 'length' | xargs -I {} echo "  ✓ {} устройств получено"
 	@echo ""
 	@echo "GET /api/profiles:"
-	@curl -s http://localhost:8080/api/profiles | jq -r '.[0:2] | length' | xargs -I {} echo "  ✓ {} профиля получены"
+	@curl -s "http://localhost:8080/api/profiles?page=1&perPage=10" | jq -r '.pagination.total' | xargs -I {} echo "  ✓ {} профилей всего"
 	@echo ""
 	@echo "✅ API работает корректно!"
+
+e2e: ## Полный E2E тест (поднять всё + проверить)
+	@echo "🧪 Запуск E2E тестирования..."
+	@echo ""
+	@$(MAKE) demo
+	@echo ""
+	@echo "⏳ Ждем полной готовности (5 сек)..."
+	@sleep 5
+	@echo ""
+	@$(MAKE) api-test
+	@echo ""
+	@echo "🌐 Проверяем Frontend..."
+	@curl -s -o /dev/null -w "  ✓ Frontend HTTP status: %{http_code}\n" http://localhost:3000
+	@echo ""
+	@echo "✅ E2E тест пройден успешно!"
+	@echo ""
+	@echo "📍 Откройте в браузере: http://localhost:3000"
 
 # Production commands
 prod-up: ## Запустить в продакшн режиме (docker-compose.prod.yml)

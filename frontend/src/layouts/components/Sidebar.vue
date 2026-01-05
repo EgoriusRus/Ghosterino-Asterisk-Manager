@@ -52,13 +52,8 @@ const sidebarClasses = computed(() => {
 
 <template>
   <aside :class="sidebarClasses">
-    <!-- Logo/Brand -->
-    <router-link to="/admin/profiles">
-      <img class="w-auto h-6 sm:h-7" src="https://merakiui.com/images/logo.svg" alt="Logo">
-    </router-link>
-
     <!-- Navigation -->
-    <div class="flex flex-col justify-between flex-1 mt-6">
+    <div class="flex flex-col justify-between flex-1">
       <nav>
         <router-link
           v-for="(item, index) in menuItems"

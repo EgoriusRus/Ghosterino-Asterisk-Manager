@@ -8,7 +8,9 @@ import type {
 } from '@/types/api'
 
 // API base URL - can be configured via environment variables
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
+// In Docker: nginx proxies /api to backend
+// In dev mode: vite proxies /api to backend at localhost:8080
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
 // Generic fetch wrapper with error handling
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
