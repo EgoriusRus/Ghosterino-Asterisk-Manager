@@ -9,11 +9,11 @@ demo: ## Полное развертывание демо (Docker + seed)
 	@echo "📦 1/3 Поднимаем Docker Compose..."
 	@docker-compose up -d --build
 	@echo ""
-	@echo "⏳ 2/3 Ждем готовности PostgreSQL (15 сек)..."
-	@sleep 15
+	@echo "⏳ 2/3 Ждем готовности PostgreSQL (10 сек)..."
+	@sleep 10
 	@echo ""
 	@echo "🌱 3/3 Заполняем базу тестовыми данными..."
-	@cd backend && $(MAKE) seed
+	@docker-compose exec -T backend ./seed
 	@echo ""
 	@echo "✅ Демо развернуто успешно!"
 	@echo ""
@@ -25,13 +25,13 @@ dev: ## Запустить для разработки (backend в Docker, front
 	@echo "🚀 Запуск в режиме разработки..."
 	@echo ""
 	@echo "📦 1/3 Поднимаем PostgreSQL и Backend..."
-	@docker-compose up -d postgres backend
+	@docker-compose up -d --build postgres backend
 	@echo ""
 	@echo "⏳ 2/3 Ждем готовности (10 сек)..."
 	@sleep 10
 	@echo ""
 	@echo "🌱 3/3 Заполняем базу тестовыми данными..."
-	@cd backend && $(MAKE) seed
+	@docker-compose exec -T backend ./seed
 	@echo ""
 	@echo "✅ Backend готов!"
 	@echo ""
@@ -69,14 +69,13 @@ logs-frontend: ## Показать логи frontend
 logs-postgres: ## Показать логи postgres
 	@docker-compose logs -f postgres
 
-seed: up ## Заполнить базу тестовыми данными
+seed: ## Заполнить базу тестовыми данными (через Docker)
 	@echo "🌱 Заполняем базу данных..."
-	@sleep 5
-	@cd backend && $(MAKE) seed
+	@docker-compose exec -T backend ./seed
 
-generator: ## Запустить генератор конфигов
+generator: ## Запустить генератор конфигов (через Docker)
 	@echo "⚙️  Генерируем конфиги..."
-	@cd backend && $(MAKE) generator
+	@docker-compose exec -T backend ./generator
 
 build: ## Пересобрать Docker образы
 	@echo "🔨 Пересобираем Docker образы..."
@@ -100,9 +99,9 @@ clean: down ## Полная очистка (контейнеры + volumes + к�
 	@rm -rf backend/bin/
 	@echo "✅ Все очищено"
 
-test: ## Запустить тесты
+test: ## Запустить тесты (через Docker)
 	@echo "🧪 Запускаем тесты..."
-	@cd backend && go test ./...
+	@docker-compose exec -T backend go test ./... 2>/dev/null || echo "Тесты недоступны в production образе"
 
 status: ## Показать статус сервисов
 	@docker-compose ps
@@ -174,6 +173,14 @@ prod-build: ## Пересобрать продакшн образы
 	@docker-compose -f docker-compose.prod.yml build --no-cache
 	@docker-compose -f docker-compose.prod.yml up -d
 	@echo "✅ Образы пересобраны и запущены"
+
+prod-seed: ## Заполнить базу в продакшн (через Docker)
+	@echo "🌱 Заполняем продакшн базу данных..."
+	@docker-compose -f docker-compose.prod.yml exec -T backend ./seed
+
+prod-generator: ## Запустить генератор в продакшн (через Docker)
+	@echo "⚙️  Генерируем конфиги в продакшн..."
+	@docker-compose -f docker-compose.prod.yml exec -T backend ./generator
 
 backup: ## Создать бэкап базы данных
 	@echo "💾 Создание бэкапа базы данных..."

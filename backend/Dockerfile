@@ -10,8 +10,10 @@ RUN go mod download
 # Копируем исходный код
 COPY . .
 
-# Собираем приложение
+# Собираем все бинарники
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o seed ./cmd/seed
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o generator ./cmd/generator
 
 # Runtime stage
 FROM alpine:latest
@@ -20,8 +22,10 @@ RUN apk --no-cache add ca-certificates tzdata
 
 WORKDIR /app
 
-# Копируем бинарник из builder stage
+# Копируем бинарники из builder stage
 COPY --from=builder /app/main .
+COPY --from=builder /app/seed .
+COPY --from=builder /app/generator .
 
 # Создаём директорию для результатов
 RUN mkdir -p /app/results
