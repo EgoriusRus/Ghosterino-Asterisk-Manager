@@ -148,9 +148,14 @@ func (rs *Repos) Delete(object interface{}) error {
 	return rs.db.Delete(object).Error
 }
 
-// FindAll находит все записи
+// FindAll находит все записи с сортировкой по ID
 func (rs *Repos) FindAll(dest interface{}) error {
-	return rs.db.Find(dest).Error
+	return rs.db.Order("id ASC").Find(dest).Error
+}
+
+// FindAllDevices находит все устройства с сортировкой по MAC
+func (rs *Repos) FindAllDevices(dest *[]domain.Device) error {
+	return rs.db.Order("mac ASC").Find(dest).Error
 }
 
 // FindByID находит запись по ID
@@ -190,7 +195,8 @@ func (rs *Repos) FindProfilesWithLocations(isActive *bool, pagination *domain.Pa
 		return nil, 0, err
 	}
 
-	// Apply pagination
+	// Apply sorting and pagination
+	query = query.Order("p.id ASC")
 	query = applyPagination(query, pagination)
 
 	err := query.Scan(&profiles).Error

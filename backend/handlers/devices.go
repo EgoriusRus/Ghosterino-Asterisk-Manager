@@ -9,7 +9,7 @@ import (
 // GetDevices возвращает список всех устройств
 func (h *Handler) GetDevices(c *fiber.Ctx) error {
 	var devices []domain.Device
-	if err := h.repos.FindAll(&devices); err != nil {
+	if err := h.repos.FindAllDevices(&devices); err != nil {
 		return err
 	}
 	return c.JSON(devices)

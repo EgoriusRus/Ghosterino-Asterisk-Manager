@@ -34,6 +34,7 @@ const showDeleteDialog = ref(false)
 const formData = ref({
   id: 0,
   name: '',
+  email: '',
   internalNumber: null as number | null,
   externalNumber: '',
   device: null as string | null,
@@ -53,6 +54,7 @@ const selectedProfile = ref<ProfileWithLocation | null>(null)
 // Table headers
 const headers = [
   { title: 'Имя', key: 'name', sortable: true },
+  { title: 'Email', key: 'email', sortable: true },
   { title: 'Внутренний', key: 'internalNumber', sortable: true },
   { title: 'Локация', key: 'locationName', sortable: true },
   { title: 'Устройство', key: 'device', sortable: false },
@@ -122,6 +124,7 @@ const resetForm = () => {
   formData.value = {
     id: 0,
     name: '',
+    email: '',
     internalNumber: null,
     externalNumber: '',
     device: null,
@@ -145,6 +148,7 @@ const openEditModal = async (profile: ProfileWithLocation) => {
   formData.value = {
     id: profile.id,
     name: profile.name,
+    email: profile.email || '',
     internalNumber: profile.internalNumber,
     externalNumber: profile.externalNumber,
     device: profile.device,
@@ -173,7 +177,7 @@ const createProfile = async () => {
   try {
     await profilesAPI.create({
       name: formData.value.name,
-      email: '',
+      email: formData.value.email,
       internalNumber: formData.value.internalNumber!,
       externalNumber: formData.value.externalNumber,
       device: formData.value.device,
@@ -204,6 +208,7 @@ const updateProfile = async () => {
   try {
     await profilesAPI.update(formData.value.id, {
       name: formData.value.name,
+      email: formData.value.email,
       internalNumber: formData.value.internalNumber!,
       externalNumber: formData.value.externalNumber,
       device: formData.value.device,
@@ -311,6 +316,11 @@ onMounted(() => {
           </div>
         </template>
 
+        <template #item.email="{ item }">
+          <span v-if="item.email">{{ item.email }}</span>
+          <span v-else class="text-medium-emphasis">—</span>
+        </template>
+
         <template #item.locationName="{ item }">
           {{ item.locationName || '—' }}
         </template>
@@ -390,12 +400,21 @@ onMounted(() => {
           <v-progress-linear v-if="loadingReferences" indeterminate class="mb-4" />
           <v-form v-else v-model="formValid" @submit.prevent="createProfile">
             <v-row dense>
-              <v-col cols="12">
+              <v-col cols="12" md="6">
                 <v-text-field
                   v-model="formData.name"
                   label="ФИО"
                   :rules="[rules.required]"
                   placeholder="Иванов Иван Иванович"
+                />
+              </v-col>
+
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model="formData.email"
+                  label="Email"
+                  type="email"
+                  placeholder="ivanov@company.ru"
                 />
               </v-col>
 
@@ -495,12 +514,21 @@ onMounted(() => {
           <v-progress-linear v-if="loadingReferences" indeterminate class="mb-4" />
           <v-form v-else v-model="formValid" @submit.prevent="updateProfile">
             <v-row dense>
-              <v-col cols="12">
+              <v-col cols="12" md="6">
                 <v-text-field
                   v-model="formData.name"
                   label="ФИО"
                   :rules="[rules.required]"
                   placeholder="Иванов Иван Иванович"
+                />
+              </v-col>
+
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model="formData.email"
+                  label="Email"
+                  type="email"
+                  placeholder="ivanov@company.ru"
                 />
               </v-col>
 
