@@ -40,6 +40,11 @@ async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> 
       throw new Error(`HTTP error! status: ${response.status}`)
     }
 
+    // 204 No Content - нет тела ответа
+    if (response.status === 204) {
+      return undefined as T
+    }
+
     return await response.json()
   } catch (error) {
     console.error('API request failed:', error)

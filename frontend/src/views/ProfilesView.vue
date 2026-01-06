@@ -231,15 +231,16 @@ const updateProfile = async () => {
 
 // Delete profile
 const deleteProfile = async () => {
-  if (!selectedProfile.value) return
+  if (!selectedProfile.value || formLoading.value) return
 
+  const profileId = selectedProfile.value.id
   formLoading.value = true
   error.value = null
+  showDeleteDialog.value = false
+  selectedProfile.value = null
 
   try {
-    await profilesAPI.delete(selectedProfile.value.id)
-    showDeleteDialog.value = false
-    selectedProfile.value = null
+    await profilesAPI.delete(profileId)
     await loadProfiles()
   } catch (err) {
     error.value = 'Не удалось удалить сотрудника'
@@ -640,6 +641,7 @@ onMounted(() => {
           <v-btn
             color="error"
             :loading="formLoading"
+            :disabled="formLoading"
             @click="deleteProfile"
           >
             Удалить
