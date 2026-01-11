@@ -1,4 +1,4 @@
-# Romchek Asteriska Frontend
+# Asterisk Manager Frontend
 
 Vue 3 + TypeScript + Tailwind CSS Single Page Application
 
